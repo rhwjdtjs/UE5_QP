@@ -13,8 +13,10 @@
 <p align="center">
   UE5(C++) 기반 <b>Listen Server Co-op 생존/탈출</b> 프로젝트의 <b>개발/통합 브랜치(dev) 전용 문서</b><br/>
   공개용 소개/로드맵은 <code>main</code> 브랜치 <code>README.md</code>를 기준으로 합니다.  
-  https://github.com/rhwjdtjs/UE5_QP/blob/main/README.md 
 </p>
+<p align="center">
+  https://github.com/rhwjdtjs/UE5_QP/blob/main/README.md   
+ </p>
  
 <p align="center">
   <img src="https://img.shields.io/badge/Engine-UE%205.5.4-black?style=for-the-badge" />
