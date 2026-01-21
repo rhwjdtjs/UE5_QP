@@ -14,7 +14,7 @@
 -->
 
 ---
-<img width="2038" height="1249" alt="Image" src="https://github.com/user-attachments/assets/c2ffa907-f8c1-40c4-9fea-7db016541f31" />
+<img width="2038" height="1249" alt="Image" src="https://github.com/user-attachments/assets/e4df391a-aa6d-4220-b645-0bcbbcc78811" />
 
     Game Concept
 
