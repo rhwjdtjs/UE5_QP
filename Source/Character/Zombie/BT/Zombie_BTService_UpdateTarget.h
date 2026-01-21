@@ -40,4 +40,13 @@ protected:
 	FBlackboardKeySelector LastKnownLocationKey; //블랙보드 키 선택기
 	UPROPERTY(EditAnywhere, Category = "Blackboard")
 	FBlackboardKeySelector InvestigatingKey; //블랙보드 키 선택기
+
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector HasTargetKey; //블랙보드 키 선택기
+
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector DistanceToTargetKey; //블랙보드 키 선택기
+
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector IsAttackingKey; //블랙보드 키 선택기
 };

@@ -43,7 +43,24 @@ public:
 	bool CanAttackTarget() const;//타겟 공격 가능 여부 확인 함수
 	UFUNCTION(BlueprintCallable, Category = "Zombie")
 	void StartAttack(); //공격 시작 함수
+
+	//AnimNotify에서 호출할 함수
+	UFUNCTION(BlueprintCallable, Category = "Zombie|Combat")
+	void AttackHit(); //공격 히트 처리 함수
+	UFUNCTION(BlueprintCallable, Category="Zombie|Combat")
+	void AttackEnd(); //공격 종료 처리 함수
+	UFUNCTION(BlueprintPure, Category="Zombie|Combat")
+	FORCEINLINE bool IsAttacking() const { return bIsAttacking; } //공격 중인지 여부 반환 함수
+	UFUNCTION(BlueprintPure, Category = "Zombie|Combat")
+	FORCEINLINE float GetAttackRange() const { return AttackRange; } //공격 범위 반환 함수
 private:
 	float LastAttackTime = -1000.f; //마지막 공격 시간
+
+	bool bPrevOrientRotationToMovement = true; //이전 회전 방향 플래그
+	UFUNCTION()
+	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted); //공격 몽타주 종료 콜백 함수
+
+	void EnterAttackRootMotionMode(); //루트 모션 모드 진입 함수
+	void ExitAttackRootMotionMode(); //루트 모션 모드 종료 함수
 
 };

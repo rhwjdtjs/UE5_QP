@@ -34,4 +34,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Anim")
 	float SpeedInterpRate = 8.f; // 클수록 빨리 따라감
+	UFUNCTION()
+	void AnimNotify_AttackHit(); //애님노티파이: 공격 히트
+	UFUNCTION()
+	void AnimNotify_AttackEnd(); //애님노티파이: 공격 종료
 };
