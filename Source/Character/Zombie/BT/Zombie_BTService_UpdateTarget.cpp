@@ -5,6 +5,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "PJ_Quiet_Protocol/Character/QPCharacter.h"
 #include "PJ_Quiet_Protocol/Character/Zombie/ZombieCharacter.h"
+#include "PJ_Quiet_Protocol/Commons/QPCombatTypes.h"
+
 
 UZombie_BTService_UpdateTarget::UZombie_BTService_UpdateTarget()
 {
@@ -16,6 +18,9 @@ UZombie_BTService_UpdateTarget::UZombie_BTService_UpdateTarget()
 
 	LastKnownLocationKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UZombie_BTService_UpdateTarget, LastKnownLocationKey)); //마지막 알려진 위치 키에 벡터 타입 필터 추가
 	InvestigatingKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UZombie_BTService_UpdateTarget, InvestigatingKey)); //조사 중 키에 불린 타입 필터 추가
+	HasTargetKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UZombie_BTService_UpdateTarget, HasTargetKey)); //타겟 보유 키에 불린 타입 필터 추가
+	DistanceToTargetKey.AddFloatFilter(this, GET_MEMBER_NAME_CHECKED(UZombie_BTService_UpdateTarget, DistanceToTargetKey)); //타겟과의 거리 키에 플로트
+	IsAttackingKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UZombie_BTService_UpdateTarget, IsAttackingKey)); //공격 중 키에 불린 타입 필터 추가
 
 }
 
@@ -57,6 +62,9 @@ void UZombie_BTService_UpdateTarget::TickNode(UBehaviorTreeComponent& OwnerComp,
 	const FName KeyName = BlackboardKey.SelectedKeyName; //블랙보드 키 이름 가져오기
 	const FName LastKnownLocationKeyName = LastKnownLocationKey.SelectedKeyName; //마지막 알려진 위치 키 이름 가져오기
 	const FName InvestigatingKeyName = InvestigatingKey.SelectedKeyName; //조사 중	
+	const FName HasTargetKeyName = HasTargetKey.SelectedKeyName; //타겟 보유 키 이름
+	const FName DistanceToTargetKeyName = DistanceToTargetKey.SelectedKeyName; //타겟과의 거리 키 이름
+	const FName IsAttackingKeyName = IsAttackingKey.SelectedKeyName; //공격 중 키 이름
 
 	const bool bWasInvestigating = BlackboardComponent->GetValueAsBool(InvestigatingKeyName); //이전 조사 중 상태 가져오기
 	AActor* CurrentTarget = Cast<AActor>(BlackboardComponent->GetValueAsObject(KeyName)); //현재 타겟 가져오기
@@ -69,6 +77,11 @@ void UZombie_BTService_UpdateTarget::TickNode(UBehaviorTreeComponent& OwnerComp,
 		BlackboardComponent->ClearValue(KeyName); //유효하지 않은 후보인 경우 블랙보드에서 타겟 제거
 		Zombie->SetTarget(nullptr); //좀비의 타겟도 제거
 		BlackboardComponent->SetValueAsBool(InvestigatingKeyName, false); //조사 중 해제
+
+		BlackboardComponent->SetValueAsBool(HasTargetKeyName, false); //타겟 보유 상태 갱신
+		BlackboardComponent->SetValueAsFloat(DistanceToTargetKeyName, TNumericLimits<float>::Max()); //타겟과의 거리 갱신
+		BlackboardComponent->SetValueAsBool(IsAttackingKeyName, Zombie->IsAttacking()); //공격 중 상태
+
 		return;
 	}
 	//거리조건
@@ -124,4 +137,19 @@ void UZombie_BTService_UpdateTarget::TickNode(UBehaviorTreeComponent& OwnerComp,
 			}
 		}
 	}
+	AActor* FinalTarget = Cast<AActor>(BlackboardComponent->GetValueAsObject(KeyName)); //최종 타겟 가져오기
+	const bool bHasTargetNow = IsValid(FinalTarget); //최종 타겟이 있는지 여부
+	BlackboardComponent->SetValueAsBool(HasTargetKeyName, bHasTargetNow); //타겟 보유 상태 갱신
+	BlackboardComponent->SetValueAsFloat(DistanceToTargetKeyName, bHasTargetNow ? FVector::Dist(Pawn->GetActorLocation(), FinalTarget->GetActorLocation()) : TNumericLimits<float>::Max()); //타겟과의 거리 갱신
+
+	BlackboardComponent->SetValueAsBool(IsAttackingKeyName, Zombie->IsAttacking()); //공격 중 상태
+
+	DBG_SCREEN(
+		1002, 0.25f, FColor::Yellow,
+		"Keys: TargetKey=%s HasTargetKey=%s DistKey=%s IsAttackingKey=%s",
+		*KeyName.ToString(),
+		*HasTargetKeyName.ToString(),
+		*DistanceToTargetKeyName.ToString(),
+		*IsAttackingKeyName.ToString()
+	);
 }
