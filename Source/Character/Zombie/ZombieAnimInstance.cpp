@@ -2,7 +2,7 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/Character.h"
 #include "PJ_Quiet_Protocol/Character/Zombie/ZombieCharacter.h"
-#include "PJ_Quiet_Protocol/Commons/QPCombatTypes.h"
+#include "PJ_Quiet_Protocol/Commons/DefineCommons.h"
 
 void UZombieAnimInstance::NativeInitializeAnimation()
 {
