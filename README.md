@@ -14,7 +14,7 @@
 -->
 
 ---
-<img width="2038" height="1249" alt="Image" src="https://github.com/user-attachments/assets/c2ffa907-f8c1-40c4-9fea-7db016541f31" />
+<img width="2038" height="1249" alt="Image" src="https://github.com/user-attachments/assets/11c4d0da-5e8d-4010-8375-7be12beae216" />
 
     Game Concept
 
@@ -59,6 +59,89 @@
 **애니메이션 연동(MVP-1 핵심 잔여)**
 - WeaponType(None / Melee / Gun) 기반 로코모션 분기(AnimBP State Machine 구성)
 - 공격 애님 몽타주 연결(근접 휘두르기 / 총기 발사)
+<br/>
+</details>
+
+## 개발현황 (01.22)
+<details>
+<summary><b>펼치기 / 접기</b> (클릭)</summary>
+<br/>
+
+> 기준일: **01.22**  
+> 목표: **MVP-2 (좀비 AI + 전투 루프 + 애니메이션 연동 완성)**  
+> 캐릭터 전투 코어 안정화 이후, **적 AI / 전투 상호작용 / 게임 플레이 루프** 구축 단계
+
+---
+
+### ✅ 완료 (Done)
+
+#### 좀비 AI 시스템 (MVP-2 핵심)
+- `AZombieCharacter`
+  - 플레이어 인식 / 추적 / 공격 전이 구조 완성
+  - 애니메이션 인스턴스(`UZombieAnimInstance`)와 상태 연동
+- AI Controller / Behavior Tree
+  - Wander → Investigate → Chase → Attack 흐름 구축
+  - 마지막 위치 추적 / 플레이어 재탐지 로직 구현
+- BT Service / Task
+  - 타겟 탐지 및 갱신 서비스 구현
+  - 거리 / 시야 기반 상태 전환 안정화
+- 공격 처리
+  - 공격 몽타주 연동
+  - 루트모션 기반 근접 공격 처리 정리
+
+---
+
+#### 좀비 스포너 시스템
+- `AZombieSpawner` (C++)
+  - NavMesh 기반 랜덤 스폰
+  - 스폰 영역(Box Component) 지원
+  - 최대 생존 수 유지 구조
+  - 스폰 간격 타이머 관리
+  - 가중치 기반 좀비 타입 선택 구조 설계
+    - 현재 1종 좀비 사용
+    - 추후 다종 좀비 확장 고려 완료
+
+---
+
+#### 애니메이션 제작 현황 (협업)
+- 기본 이동 애니메이션 거의 완료
+  - Idle / Walk / Run / Sprint
+- IK 구현 완료
+- Aim Offset 구현 완료
+- 상체 / 하체 분리 기반 애니메이션 구조 정리
+- 애니메이션 파이프라인 안정화 단계
+
+---
+
+### 📌 현재 확인된 결과
+- 플레이어
+  - 이동 / 무기 장착 / 공격 정상 동작
+  - 애니메이션 상태 전달 구조 문제 없음
+- 좀비
+  - 스폰 → 이동 → 추적 → 공격 플로우 정상
+  - 다수 스폰 환경에서도 AI 로직 안정 동작
+
+---
+
+### 🚧 진행 중 (In Progress)
+
+#### 애니메이션 최종 연동 (MVP-2 마무리)
+- 플레이어
+  - 재장전 애니메이션
+  - 에임 상태 카메라 확대(FOV 변경)
+- 공격 애니메이션 세부 조정
+  - 근접 / 사격 타이밍 보정
+  - AnimNotify 기반 판정 정리 예정
+
+---
+
+### 🔜 다음 단계 예정 (Next)
+- 데미지 / HP / 사망 처리 통합 (플레이어 + 좀비)
+- 피격 리액션 및 사망 애니메이션
+- 서버 - 클라이언트 구조 완성
+- 플레이어 스탯 제작 및 UI
+- 인벤토리 제작 (기간이 가능하다면)
+
 <br/>
 </details>
 
