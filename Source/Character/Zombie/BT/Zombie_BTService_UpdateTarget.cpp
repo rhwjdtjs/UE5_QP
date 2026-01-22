@@ -5,7 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "PJ_Quiet_Protocol/Character/QPCharacter.h"
 #include "PJ_Quiet_Protocol/Character/Zombie/ZombieCharacter.h"
-#include "PJ_Quiet_Protocol/Commons/QPCombatTypes.h"
+#include "PJ_Quiet_Protocol/Commons/DefineCommons.h"
 
 
 UZombie_BTService_UpdateTarget::UZombie_BTService_UpdateTarget()

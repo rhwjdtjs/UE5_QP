@@ -4,7 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Animation/AnimInstance.h"
 #include "AIController.h"
-#include "PJ_Quiet_Protocol/Commons/QPCombatTypes.h"
+#include "PJ_Quiet_Protocol/Commons/DefineCommons.h"
 
 AZombieCharacter::AZombieCharacter()
 {
