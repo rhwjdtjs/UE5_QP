@@ -81,6 +81,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult); //조준선 아래 충돌 검사 함수
+
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 private:
