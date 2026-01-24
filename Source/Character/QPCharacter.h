@@ -35,6 +35,8 @@ public:
 		 */
 		return bWantsToSprint && MoveInputVector.X > 0.f; // W 입력일 때만 
 	}
+	UFUNCTION(Blueprintpure, Category="Inventory")
+	FORCEINLINE class UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; } //인벤토리 컴포넌트 반환 함수
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override; //앉기 시작시 호출
@@ -95,4 +97,7 @@ private:
 	AWeaponBase* OverlappingWeapon = nullptr; //장착된 무기 포인터
 
 	FVector2D MoveInputVector = FVector2D::ZeroVector; //현재 이동 입력 상태 Sprint 가능 여부 판단용 (앞으로 갈때만 Sprint 가능)
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInventoryComponent> InventoryComponent; //인벤토리 컴포넌트
 };
