@@ -10,6 +10,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "PJ_Quiet_Protocol/Character/QPAniminstance.h"
 #include "PJ_Quiet_Protocol/Inventory/InventoryComponent.h"
+#include "PJ_Quiet_Protocol/Inventory/WorldItemActor.h"
 
 AQPCharacter::AQPCharacter()
 {
@@ -42,6 +43,13 @@ AQPCharacter::AQPCharacter()
 	//컴뱃 컴포넌트
 	CombatComponent = CreateDefaultSubobject<UQPCombatComponent>(TEXT("CombatComponent")); //전투 컴포넌트 생성
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent")); //인벤토리 컴포넌트 생성
+}
+
+void AQPCharacter::SetOverlappingWorldItem(AWorldItemActor* WorldItem)
+{
+	if (OverlappingWorldItem == WorldItem) return; //겹쳐진 월드 아이템이 이미 설정된 아이템과 같으면 함수 종료
+	OverlappingWorldItem = WorldItem; //겹쳐진 월드 아이템 설정
+	UpdatePickupWidgetTarget(); //픽업 위젯 타겟 업데이트
 }
 
 void AQPCharacter::BeginPlay()
@@ -96,6 +104,96 @@ void AQPCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	// input 추가
 	PlayerInputComponent->BindAction(TEXT("Attack"), IE_Pressed, this, &AQPCharacter::AttackPressed); //발사 바인딩
 	PlayerInputComponent->BindAction(TEXT("Attack"), IE_Released, this, &AQPCharacter::AttackReleased); //발사 멈춤 바인딩
+  PlayerInputComponent->BindAction(TEXT("Aim"), IE_Pressed, this, &AQPCharacter::AimButtonPressed); //조준 바인딩
+	PlayerInputComponent->BindAction(TEXT("Aim"), IE_Released, this, &AQPCharacter::AimButtonReleased); //조준 멈춤 바인딩
+	PlayerInputComponent->BindAction(TEXT("Equip"), IE_Pressed, this, &AQPCharacter::EquipPressed); //장착 바인딩
+	PlayerInputComponent->BindAction(TEXT("Equip"), IE_Released, this, &AQPCharacter::EquipReleased); //장착 해제 바인딩
+}
+void AQPCharacter::EquipPressed()
+{
+	bEquipKeyDown = true; //장착 키 눌림 상태 설정
+	bEquipHoldConsumed = false; //장착 홀드 소비 상태 초기화
+
+	GetWorldTimerManager().ClearTimer(EquipHoldTimerHandle); //타이머 초기화
+	GetWorldTimerManager().SetTimer(EquipHoldTimerHandle, this, &AQPCharacter::OnEquipHoldTriggered, EquipHoldThreshhold, false); //장착 홀드 타이머 설정
+}
+void AQPCharacter::EquipReleased()
+{
+	bEquipKeyDown = false; //장착 키 눌림 상태 해제
+	GetWorldTimerManager().ClearTimer(EquipHoldTimerHandle); //타이머 초기화
+	if (bEquipHoldConsumed) //장착 홀드가 소비되지 않은 경우
+	{
+		bEquipHoldConsumed = false; //장착 홀드 소비 상태 초기화
+		return; //함수 종료
+	}
+	TryEquipWeapon(); //무기 장착 시도 짧게 눌렀을때
+}
+void AQPCharacter::TryEquipWeapon() {
+	if (!CombatComponent) return;
+	if (OverlappingWeapon) //겹쳐진 무기가 있으면
+	{
+		CombatComponent->EquipWeapon(OverlappingWeapon, true); //무기 장착 시도
+		OverlappingWeapon = nullptr; //겹쳐진 무기 초기화
+		SetOverlappingWeapon(nullptr); //겹쳐진 무기 설정 함수 호출
+		return;
+	}
+	if(OverlappingWorldItem && InventoryComponent) //겹쳐진 월드 아이템이 있고 인벤토리 컴포넌트가 있으면
+	{
+		UItemDataAsset* ItemData = OverlappingWorldItem->ItemData; //겹쳐진 월드 아이템의 아이템 데이터 가져오기
+		const int32 Quantity = OverlappingWorldItem->Quantity; //겹쳐진 월드 아이템의 수량 가져오기
+		if (ItemData && Quantity > 0)
+		{
+			const bool bAdded = InventoryComponent->AddItem(ItemData, Quantity); //아이템 인벤토리에 추가 시도
+			if (bAdded)
+			{
+				AWorldItemActor* Picked = OverlappingWorldItem; //픽업한 월드 아이템 저장
+				SetOverlappingWorldItem(nullptr); //겹쳐진 월드 아이템 초기화
+				Picked->Destroy(); //월드 아이템 액터 파괴
+			}
+		}
+	}
+}
+//E 홀드(길게): 무기면 인벤 저장(장착 안함), 아이템이면 인벤 추가
+void AQPCharacter::TryStorePickupToInventory()
+{
+	if (!InventoryComponent) return; //인벤토리 컴포넌트가 없으면 함수 종료
+
+	if (OverlappingWeapon)
+	{
+		UItemDataAsset* WeaponItemData = OverlappingWeapon->GetWeaponItemData(); //겹쳐진 무기의 아이템 데이터 가져오기
+		if (!WeaponItemData) return; //아이템 데이터가 없으면 함수 종료
+
+		const bool bAdded = InventoryComponent->AddItem(WeaponItemData, 1); //아이템 인벤토리에 추가 시도
+		if (bAdded)
+		{
+			AWeaponBase* PickedWeapon = OverlappingWeapon; //픽업한 무기 저장
+			SetOverlappingWeapon(nullptr); //겹쳐진 무기 초기화
+			PickedWeapon->Destroy(); //무기 액터 파괴
+		}
+		return;
+	}
+	// 월드 아이템: 인벤토리 추가
+	if (OverlappingWorldItem)
+	{
+		UItemDataAsset* ItemData = OverlappingWorldItem->ItemData; //겹쳐진 월드 아이템의 아이템 데이터 가져오기
+		const int32 Quantity = OverlappingWorldItem->Quantity; //겹쳐진 월드 아이템의 수량 가져오기
+		if (ItemData && Quantity > 0)
+		{
+			const bool bAdded = InventoryComponent->AddItem(ItemData, Quantity); //아이템 인벤토리에 추가 시도
+			if (bAdded)
+			{
+				AWorldItemActor* Picked = OverlappingWorldItem; //픽업한 월드 아이템 저장
+				SetOverlappingWorldItem(nullptr); //겹쳐진 월드 아이템 초기화
+				Picked->Destroy(); //월드 아이템 액터 파괴
+			}
+		}
+	}
+}
+void AQPCharacter::OnEquipHoldTriggered()
+{
+	if (!bEquipKeyDown) return; //장착 키가 눌리지 않은 경우 함수 종료
+	bEquipHoldConsumed = true; //장착 홀드 소비 상태 설정
+	TryStorePickupToInventory(); //인벤토리에 픽업 저장 시도
 	PlayerInputComponent->BindAction(TEXT("Equip"), IE_Pressed, this, &AQPCharacter::TryEquipWeapon); //장착 바인딩
 	PlayerInputComponent->BindAction(TEXT("Aim"), IE_Pressed, this, &AQPCharacter::AimButtonPressed); //조준 바인딩
 	PlayerInputComponent->BindAction(TEXT("Aim"), IE_Released, this, &AQPCharacter::AimButtonReleased); //조준 멈춤 바인딩
@@ -104,11 +202,8 @@ void AQPCharacter::SetOverlappingWeapon(AWeaponBase* Weapon)
 {
 	if (OverlappingWeapon == Weapon) return; //겹쳐진 무기가 이미 설정된 무기와 같으면 함수 종료
 	OverlappingWeapon = Weapon; //겹쳐진 무기 설정
-	if (!IsLocallyControlled()) return; //로컬에서 제어되지 않는 경우 함수 종료
-	if (AQPPlayerController* PlayerController = Cast<AQPPlayerController>(GetController())) //플레이어 컨트롤러 가져오기
-	{
-		PlayerController->SetPickupTarget(OverlappingWeapon); //픽업 타겟 설정
-	}
+	UpdatePickupWidgetTarget(); //픽업 위젯 타겟 업데이트
+	
 }
 void AQPCharacter::HandleWeaponTypeChanged(EQPWeaponType NewWeaponType)
 {
@@ -207,17 +302,21 @@ void AQPCharacter::UpdateMovementSpeed()
 	}
 
 }
+void AQPCharacter::UpdatePickupWidgetTarget()
+{
+	if (!IsLocallyControlled()) return; //로컬 컨트롤러가 아니면 함수 종료
 
-//전투 (Combat) 관련 함수들
-void AQPCharacter::TryEquipWeapon() {
-	if (!CombatComponent) return;
-	if (OverlappingWeapon) //겹쳐진 무기가 있으면
+	AActor* NewTarget = nullptr; //새로운 타겟 액터 초기화
+	if(OverlappingWeapon) NewTarget = OverlappingWeapon; //겹쳐진 무기가 있으면 타겟 설정
+	else if (OverlappingWorldItem) NewTarget = OverlappingWorldItem; //겹쳐진 월드 아이템이 있으면 타겟 설정
+
+	if(AQPPlayerController* PlayerController = Cast<AQPPlayerController>(GetController()))
 	{
-		CombatComponent->EquipWeapon(OverlappingWeapon, true); //무기 장착 시도
-		OverlappingWeapon = nullptr; //겹쳐진 무기 초기화
-		SetOverlappingWeapon(nullptr); //겹쳐진 무기 설정 함수 호출
+		PlayerController->SetPickupTarget(NewTarget); //픽업 타겟 설정
 	}
 }
+//전투 (Combat) 관련 함수들
+
 void AQPCharacter::AttackPressed()
 {
 	if (CombatComponent) CombatComponent->StartAttack(); //공격 시작
