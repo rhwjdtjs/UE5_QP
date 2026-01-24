@@ -7,6 +7,8 @@
 #include "PJ_Quiet_Protocol/Character/Components/QPCombatComponent.h"
 #include "PJ_Quiet_Protocol/Weapons/WeaponBase.h"
 #include "Controllers/QPPlayerController.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "PJ_Quiet_Protocol/Character/QPAniminstance.h"
 #include "PJ_Quiet_Protocol/Inventory/InventoryComponent.h"
 
 AQPCharacter::AQPCharacter()
@@ -74,6 +76,7 @@ void AQPCharacter::Tick(float DeltaTime)
 		const FVector NewOffset = FMath::VInterpTo(CameraBoom->TargetOffset, DesiredOffset, DeltaTime, CrouchCameraInterpSpeed); //카메라 오프셋 보간
 		CameraBoom->TargetOffset = NewOffset; //카메라 붐의 타겟 오프셋 업데이트
 	}
+	AimOffset(DeltaTime); //회전 차이 계산
 }
 
 void AQPCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -94,6 +97,8 @@ void AQPCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction(TEXT("Attack"), IE_Pressed, this, &AQPCharacter::AttackPressed); //발사 바인딩
 	PlayerInputComponent->BindAction(TEXT("Attack"), IE_Released, this, &AQPCharacter::AttackReleased); //발사 멈춤 바인딩
 	PlayerInputComponent->BindAction(TEXT("Equip"), IE_Pressed, this, &AQPCharacter::TryEquipWeapon); //장착 바인딩
+	PlayerInputComponent->BindAction(TEXT("Aim"), IE_Pressed, this, &AQPCharacter::AimButtonPressed); //조준 바인딩
+	PlayerInputComponent->BindAction(TEXT("Aim"), IE_Released, this, &AQPCharacter::AimButtonReleased); //조준 멈춤 바인딩
 }
 void AQPCharacter::SetOverlappingWeapon(AWeaponBase* Weapon)
 {
@@ -181,9 +186,9 @@ void AQPCharacter::UpdateMovementSpeed()
 	 * 3. 앉아 있음 → CrouchSpeed
 	 * 4. 그 외 → WalkSpeed
 	 */
-	if (IsSprinting())
+	if (IsSprinting()) //달리기 중인지 확인
 	{
-		if (bIsCrouched)
+		if (bIsCrouched) //앉아 있는지 확인
 		{
 			MoveComponent->MaxWalkSpeedCrouched = CrouchSprintSpeed; //앉아서 뛰는 속도
 		}
@@ -192,7 +197,7 @@ void AQPCharacter::UpdateMovementSpeed()
 			MoveComponent->MaxWalkSpeed = SprintSpeed; //일어서서 뛰는 속도
 		}
 	}
-	else if (bIsCrouched)
+	else if (bIsCrouched) //앉아 있는지 확인
 	{
 		MoveComponent->MaxWalkSpeedCrouched = CrouchSpeed; //앉은 상태일 때 걷는 속도
 	}
@@ -202,6 +207,7 @@ void AQPCharacter::UpdateMovementSpeed()
 	}
 
 }
+
 //전투 (Combat) 관련 함수들
 void AQPCharacter::TryEquipWeapon() {
 	if (!CombatComponent) return;
@@ -219,4 +225,83 @@ void AQPCharacter::AttackPressed()
 void AQPCharacter::AttackReleased()
 {
 	if (CombatComponent) CombatComponent->StopAttack(); //공격 멈춤
+}
+
+//조준 버튼을 눌렀을 때 호출
+void AQPCharacter::AimButtonPressed()
+{
+	if (CombatComponent) //전투 컴포넌트가 유효하면
+	{
+		CombatComponent->SetAiming(true); //조준 시작
+	}
+
+}
+
+//조준 버튼에서 손을 뗐을 때 호출
+void AQPCharacter::AimButtonReleased()
+{
+	if (CombatComponent) //전투 컴포넌트가 유효하면
+	{
+		CombatComponent->SetAiming(false); //조준 멈춤
+	}
+
+}
+
+//현재 조준 중인지 여부를 외부에서 확인
+bool AQPCharacter::IsAiming()
+{
+	return CombatComponent && CombatComponent->IsAiming(); //전투 컴포넌트가 유효하고 조준 중인지 반환
+}
+
+// 회전 차이 계산
+void AQPCharacter::AimOffset(float DeltaTime)
+{
+	if (!Controller) return; //컨트롤러가 없으면 함수 종료
+
+	const FVector Velocity = GetVelocity(); //캐릭터의 현재 속도 벡터 가져오기
+	const float Speed = FVector(Velocity.X, Velocity.Y, 0.f).Size(); //수평 속도 크기 계산
+	const bool bIsInAir = GetCharacterMovement()->IsFalling(); //캐릭터가 공중에 있는지 확인
+
+	const FRotator CurrentAimRotation(0.f, GetBaseAimRotation().Yaw, 0.f); //현재 에임 회전 계산
+
+	if (Speed == 0.f && !bIsInAir) //멈춰있고 공중에 떠있지 않을 때
+	{
+		// 현재 AimRotation과 이전 AimRotation 차이
+		const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation); //회전 차이 계산
+
+		AO_Yaw = Delta.Yaw; // Yaw 차이 설정
+		const float YawLimit = 91.f; // Yaw 제한 값 (최대 값 설정하기)
+		const float ReduceAmount = 3.f; // Yaw 감소량 (Yaw 값을 서서히 줄이기 위한 값)
+
+		if (FMath::Abs(AO_Yaw) > YawLimit) // Yaw 값이 제한 값을 초과할 때
+		{
+			AO_Yaw -= FMath::Sign(AO_Yaw) * ReduceAmount; // Yaw 값을 감소시켜 제한 값 내로 유지
+			StartingAimRotation.Yaw += FMath::Sign(AO_Yaw) * ReduceAmount; // 기준 회전도 함께 조정
+		}
+	}
+	else // 이동 중일 때
+	{
+		// 이동 중에는 기준을 계속 갱신
+		StartingAimRotation = CurrentAimRotation; // 기준 회전 갱신
+		AO_Yaw = 0.f; // Yaw 차이 초기화
+	}
+
+	AO_Pitch = GetBaseAimRotation().Pitch; // Pitch 값 설정
+}
+
+// 무기 발사 몽타주 재생 함수
+void AQPCharacter::PlayFireMontage(bool bAming)
+{
+	if (!CombatComponent) return; //전투 컴포넌트가 없으면 함수 종료
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); //애니메이션 인스턴스 가져오기
+
+	if (AnimInstance && FireWeaponMontage) //애니메이션 인스턴스와 발사 몽타주가 유효하면
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage); //발사 몽타주 재생
+		FName SectionName; //재생할 섹션 이름 변수
+		SectionName = bAming ? FName("RifleAim") : FName("RifleHip"); //조준 중이면 "RifleAim", 아니면 "RifleHip"
+		AnimInstance->Montage_JumpToSection(SectionName, FireWeaponMontage); //지정된 섹션으로 점프
+
+	}
 }
