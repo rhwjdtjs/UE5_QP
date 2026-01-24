@@ -5,7 +5,7 @@
 ============================================================= -->
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/c2ffa907-f8c1-40c4-9fea-7db016541f31" width="100%" alt="Project SZ Key Art"/>
+  <img src="https://github.com/user-attachments/assets/e4df391a-aa6d-4220-b645-0bcbbcc78811" width="100%" alt="Project SZ Key Art"/>
 </p>
 
 <h1 align="center">Project SZ (DEV)</h1>

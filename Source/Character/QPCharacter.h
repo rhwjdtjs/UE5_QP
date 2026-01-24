@@ -35,6 +35,16 @@ public:
 
 	void PlayFireMontage(bool bAming); // 무기 발사 몽타주 재생 함수
 
+	FORCEINLINE bool IsSprinting() const {
+		/**
+		 * Sprint 조건:
+		 * 1. Shift 키가 눌려 있음
+		 * 2. 전진 입력(W)일 때만 허용
+		 */
+		return bWantsToSprint && MoveInputVector.X > 0.f; // W 입력일 때만 
+	}
+	UFUNCTION(Blueprintpure, Category="Inventory")
+	FORCEINLINE class UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; } //인벤토리 컴포넌트 반환 함수
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override; //앉기 시작시 호출
@@ -111,4 +121,6 @@ private:
 	FRotator StartingAimRotaion; //시작 에임 회전 값
 
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInventoryComponent> InventoryComponent; //인벤토리 컴포넌트
 };

@@ -9,6 +9,7 @@
 #include "Controllers/QPPlayerController.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PJ_Quiet_Protocol/Character/QPAniminstance.h"
+#include "PJ_Quiet_Protocol/Inventory/InventoryComponent.h"
 
 AQPCharacter::AQPCharacter()
 {
@@ -40,6 +41,7 @@ AQPCharacter::AQPCharacter()
 
 	//컴뱃 컴포넌트
 	CombatComponent = CreateDefaultSubobject<UQPCombatComponent>(TEXT("CombatComponent")); //전투 컴포넌트 생성
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent")); //인벤토리 컴포넌트 생성
 }
 
 void AQPCharacter::BeginPlay()
