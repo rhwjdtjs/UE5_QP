@@ -13,54 +13,47 @@ UCLASS()
 class PJ_QUIET_PROTOCOL_API AWeaponBase : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	AWeaponBase();
-	UFUNCTION(BlueprintPure, Category="Weapon")
-	FORCEINLINE EQPWeaponType GetWeaponType() const { return WeaponType; } //ë¬´ê¸° íƒ€ì… ë°˜í™˜ í•¨ìˆ˜
-	UFUNCTION(BlueprintPure, Category="Weapon")
-	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; } //ë¬´ê¸° ë©”ì‰¬ ë°˜í™˜ í•¨ìˆ˜
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	FORCEINLINE EQPWeaponType GetWeaponType() const { return WeaponType; } //¹«±â Å¸ÀÔ ¹İÈ¯ ÇÔ¼ö
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; } //¹«±â ¸Ş½¬ ¹İÈ¯ ÇÔ¼ö
 
-	UFUNCTION(BlueprintCallable, Category="Weapon")
-	virtual void OnEquipped(ACharacter* NewOwner); //ë¬´ê¸° ì¥ì°© ì‹œ í˜¸ì¶œ í•¨ìˆ˜
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	virtual void OnUnequipped(bool bDropToWorld); //ë¬´ê¸° í•´ì œ ì‹œ í˜¸ì¶œ í•¨ìˆ˜
+	virtual void OnEquipped(ACharacter* NewOwner); //¹«±â ÀåÂø ½Ã È£Ãâ ÇÔ¼ö
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void OnUnequipped(bool bDropToWorld); //¹«±â ÇØÁ¦ ½Ã È£Ãâ ÇÔ¼ö
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Weapon")
-	void StartFire(); //ë°œì‚¬ ì‹œì‘ í•¨ìˆ˜
-	virtual void StartFire_Implementation(); //ê¸°ë³¸ êµ¬í˜„
+	void StartFire(); //¹ß»ç ½ÃÀÛ ÇÔ¼ö
+	virtual void StartFire_Implementation(); //±âº» ±¸Çö
 	UFUNCTION(BlueprintNativeEvent, Category = "Weapon")
-	void StopAttack(); //ê³µê²© ì¤‘ì§€ í•¨ìˆ˜
-	virtual void StopAttack_Implementation(); //ê¸°ë³¸ êµ¬í˜„
+	void StopAttack(); //°ø°İ ÁßÁö ÇÔ¼ö
+	virtual void StopAttack_Implementation(); //±âº» ±¸Çö
 protected:
 	virtual void BeginPlay() override;
-	//#01.11.19ì‹œ# ì˜¤ë²„ë© ë¬´ê¸° ì¤ê¸° ê¸°ëŠ¥ ì¶”ê°€//
+	//#01.11.19½Ã# ¿À¹ö·¦ ¹«±â Áİ±â ±â´É Ãß°¡//
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Pickup")
-	TObjectPtr<class USphereComponent> PickupSphere; //ë¬´ê¸° í”½ì—…ìš© ìŠ¤í”¼ì–´ ì»´í¬ë„ŒíŠ¸
+	TObjectPtr<class USphereComponent> PickupSphere; //¹«±â ÇÈ¾÷¿ë ½ºÇÇ¾î ÄÄÆ÷³ÍÆ®
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Pickup", meta = (ClampMin = "0.0"))
-	float PickupSphereRadius = 120.f; //í”½ì—… ìŠ¤í”¼ì–´ ë°˜ì§€ë¦„
+	float PickupSphereRadius = 120.f; //ÇÈ¾÷ ½ºÇÇ¾î ¹İÁö¸§
 	UFUNCTION()
-	void OnPickupBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult); //í”½ì—… ì‹œì‘ ì˜¤ë²„ë© ì²˜ë¦¬ í•¨ìˆ˜
+	void OnPickupBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult); //ÇÈ¾÷ ½ÃÀÛ ¿À¹ö·¦ Ã³¸® ÇÔ¼ö
 	UFUNCTION()
-	void OnPickupEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex); //í”½ì—… ì¢…ë£Œ ì˜¤ë²„ë© ì²˜ë¦¬ í•¨ìˆ˜
-	//#01.11.19ì‹œ# ì˜¤ë²„ë© ë¬´ê¸° ì¤ê¸° ê¸°ëŠ¥ ì¶”ê°€//
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon")
-	TObjectPtr<USkeletalMeshComponent> WeaponMesh; //ë¬´ê¸° ë©”ì‰¬ ì»´í¬ë„ŒíŠ¸ // TObjectPtr - ìë™ null ì²˜ë¦¬
+	void OnPickupEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex); //ÇÈ¾÷ Á¾·á ¿À¹ö·¦ Ã³¸® ÇÔ¼ö
+	//#01.11.19½Ã# ¿À¹ö·¦ ¹«±â Áİ±â ±â´É Ãß°¡//
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<USkeletalMeshComponent> WeaponMesh; //¹«±â ¸Ş½¬ ÄÄÆ÷³ÍÆ® // TObjectPtr - ÀÚµ¿ null Ã³¸®
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	EQPWeaponType WeaponType = EQPWeaponType::EWT_None; //ë¬´ê¸° íƒ€ì…
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Damage", meta = (ClampMin= "0.0"))
-	float BaseDamage = 10.f; //ê¸°ë³¸ ë°ë¯¸ì§€
+	EQPWeaponType WeaponType = EQPWeaponType::EWT_None; //¹«±â Å¸ÀÔ
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Damage", meta = (ClampMin = "0.0"))
+	float BaseDamage = 10.f; //±âº» µ¥¹ÌÁö
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Damage")
-	TSubclassOf<UDamageType> DamageTypeClass; //ë°ë¯¸ì§€ íƒ€ì… í´ë˜ìŠ¤
+	TSubclassOf<UDamageType> DamageTypeClass; //µ¥¹ÌÁö Å¸ÀÔ Å¬·¡½º
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Inventory", meta=(DisplayName="Weapon Item Data (Inventory)", ToolTip="Eë¥¼ í™€ë“œí•˜ë©´ ì¸ë²¤í† ë¦¬ì— ì €ì¥í•  ë•Œ ì‚¬ìš©í•  ì•„ì´í…œë°ì´í„° ì—ì…‹"))
-	TObjectPtr<class UItemDataAsset> WeaponItemData = nullptr; //ë¬´ê¸° ì•„ì´í…œ ë°ì´í„° ì—ì…‹ í¬ì¸í„°
-
-
-
-public:	
+public:
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(BlueprintPure, Category = "Weapon|Inventory")
-	FORCEINLINE class UItemDataAsset* GetWeaponItemData() const { return WeaponItemData; } //ë¬´ê¸° ì•„ì´í…œ ë°ì´í„° ì—ì…‹ ë°˜í™˜ í•¨ìˆ˜
 };
