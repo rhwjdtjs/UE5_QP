@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GunWeapon.h"
@@ -30,7 +30,7 @@ void AGunWeapon::StartFire_Implementation() //발사 시작 함수 재정의
 
 void AGunWeapon::StopAttack_Implementation() //공격 중지 함수 재정의
 {
-	if (UWorld* World = GetWorld())
+	if(UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(TimerHandle_AutoFire); //자동 발사 타이머 해제
 	}
@@ -55,7 +55,7 @@ void AGunWeapon::FireOnce() //한 번 발사 함수
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params); //라인 트레이스 수행
 	const FVector TraceEnd = bHit ? Hit.ImpactPoint : End; //히트 여부에 따라 트레이스 끝 지점 설정
 	//DrawDebugLine(GetWorld(), Start, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f); //디버그 라인 그리기
-
+	
 	//Bullet Projectile Spawn
 	FVector MuzzleLocation = GetActorLocation(); //기본 총구 위치를 액터 위치로 설정
 	if (WeaponMesh && WeaponMesh->DoesSocketExist(MuzzleSocketName))//무기 메쉬와 총구 소켓이 유효한 경우
@@ -72,8 +72,8 @@ void AGunWeapon::FireOnce() //한 번 발사 함수
 	}
 	/*if (bHit && Hit.GetActor()) //히트했으며 히트한 액터가 유효한 경우
 	{
-
+		
 		UGameplayStatics::ApplyPointDamage(Hit.GetActor(), BaseDamage, Dir, Hit, OwnerCharacter->GetInstigatorController(), this, DamageTypeClass);//데미지 적용
-
+		
 	}*/
 }
