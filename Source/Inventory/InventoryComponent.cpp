@@ -18,6 +18,7 @@ bool UInventoryComponent::AddItem(UItemDataAsset* ItemData, int32 Quantity)
 			const FIntPoint Position(x, y); //현재 위치 설정
 			if(AddItemAt(ItemData, Quantity, Position)) //해당 위치에 아이템 추가 시도
 			{
+				UE_LOG(LogTemp, Warning, TEXT("[INV] AddItem OK: Slots=%d"), Slots.Num()); //디버그 로그 출력
 				return true; //아이템 추가 성공
 			}
 		}
@@ -55,28 +56,31 @@ bool UInventoryComponent::RemoveItemAt(const FIntPoint& Position)
 
 bool UInventoryComponent::MoveItem(const FIntPoint& From, const FIntPoint& To)
 {
-	if (From == To) return true; //같은 위치면 성공
+	if (From == To) return true; //같은 위치로 이동 시도 시 성공 처리
 
-	for (int32 i = 0; i < Slots.Num(); ++i) //인벤토리 슬롯 순회
-	{
-		if (Slots[i].Position == From) //이동할 아이템의 위치가 일치하다면
+	const int32 FoundIndex = Slots.IndexOfByPredicate([&](const FInventorySlot& S) //인벤토리 슬롯에서 이동할 슬롯 찾기
 		{
-			FInventorySlot MovingSlot = Slots[i]; //이동할 슬롯 저장
-			Slots.RemoveAt(i); //자신과의 겹침을 피하기 위해 잠시 제거
+			return S.Position == From; //해당 위치의 슬롯 좌표가 일치하다면
+		});
 
-			if (!CanPlaceItemAt(MovingSlot.Item.ItemData, To)) //새 위치에 아이템 배치가 가능한지 확인
-			{
-				//실패 시 원래 자리 복구
-				Slots.Insert(MovingSlot, i);
-				return false; //아이템 이동 실패
-			}
-			MovingSlot.Position = To; //슬롯 위치 업데이트
-			Slots.Insert(MovingSlot, i); //슬롯을 인벤토리에 다시 추가
-			OnInventoryChanged.Broadcast(); //인벤토리 변경 알림 브로드캐스트
-			return true; //아이템 이동 성공
-		}
+	if (FoundIndex == INDEX_NONE) //해당 위치에 아이템이 없다면
+	{
+		return false; //이동 실패
 	}
-	return false; //아이템 이동 실패
+
+	FInventorySlot MovingSlot = Slots[FoundIndex]; //이동할 슬롯 복사
+	Slots.RemoveAt(FoundIndex); //이동할 슬롯 인벤토리에서 제거
+
+	if (!CanPlaceItemAt(MovingSlot.Item.ItemData, To)) //새 위치에 아이템 배치가 가능한지 확인
+	{
+		Slots.Insert(MovingSlot, FoundIndex); // 원래 위치로 복원
+		return false; //이동 실패
+	}
+
+	MovingSlot.Position = To; //슬롯 위치 업데이트
+	Slots.Add(MovingSlot);//업데이트된 슬롯을 인벤토리에 추가
+	OnInventoryChanged.Broadcast(); //인벤토리 변경 알림 브로드캐스트
+	return true; //이동 성공
 }
 
 bool UInventoryComponent::CanPlaceItemAt(UItemDataAsset* ItemData, const FIntPoint& Position)

@@ -6,105 +6,105 @@
 AWeaponBase::AWeaponBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh")); //¹«±â ¸Ş½¬ ÄÄÆ÷³ÍÆ® »ı¼º
-	SetRootComponent(WeaponMesh); //RootComponent·Î ¼³Á¤
+	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh")); //ë¬´ê¸° ë©”ì‰¬ ì»´í¬ë„ŒíŠ¸ ìƒì„±
+	SetRootComponent(WeaponMesh); //RootComponentë¡œ ì„¤ì •
 
-	//ÇÈ¾÷ °¡´ÉÇÏ°Ô
-	//#01.11.18½Ã# ¹Ù´Ú¿¡ ¶³¾îÁø ¿ÀºêÁ§Æ® ¹°¸®½Ã¹Ä·¹ÀÌ¼Ç ºñÈ°¼ºÈ­//
+	//í”½ì—… ê°€ëŠ¥í•˜ê²Œ
+	//#01.11.18ì‹œ# ë°”ë‹¥ì— ë–¨ì–´ì§„ ì˜¤ë¸Œì íŠ¸ ë¬¼ë¦¬ì‹œë®¬ë ˆì´ì…˜ ë¹„í™œì„±í™”//
 	WeaponMesh->SetSimulatePhysics(false);
-	//#01.11.18½Ã# ¹Ù´Ú¿¡ ¶³¾îÁø ¿ÀºêÁ§Æ® ¹°¸®½Ã¹Ä·¹ÀÌ¼Ç ºñÈ°¼ºÈ­//
-	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); //Ãæµ¹ È°¼ºÈ­
-	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore); //¸ğµç Ã¤³Î¿¡ ´ëÇÑ Ãæµ¹ ÀÀ´ä ¹«½Ã
-	WeaponMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic); //Ãæµ¹ Ã¤³Î ¼³Á¤
-	//#01.11.18½Ã# ¹«±â ¿ÀºêÁ§Æ® ¹Ù´Ú ¶Õ°í °¡´Â Çö»ó ¹ö±× ÇÈ½º//
-	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block); //WorldStatic Ã¤³Î¿¡ ´ëÇØ Â÷´Ü ÀÀ´ä ¼³Á¤
-	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block); //WorldStatic Ã¤³Î¿¡ ´ëÇØ Â÷´Ü ÀÀ´ä ¼³Á¤
-	//#01.11.18½Ã# ¹«±â ¿ÀºêÁ§Æ® ¹Ù´Ú ¶Õ°í °¡´Â Çö»ó ¹ö±× ÇÈ½º//
-	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block); //Visibility Ã¤³Î¿¡ ´ëÇØ Â÷´Ü ÀÀ´ä ¼³Á¤
-	WeaponMesh->SetGenerateOverlapEvents(true); //°ãÄ§ ÀÌº¥Æ® »ı¼º È°¼ºÈ­
+	//#01.11.18ì‹œ# ë°”ë‹¥ì— ë–¨ì–´ì§„ ì˜¤ë¸Œì íŠ¸ ë¬¼ë¦¬ì‹œë®¬ë ˆì´ì…˜ ë¹„í™œì„±í™”//
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); //ì¶©ëŒ í™œì„±í™”
+	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore); //ëª¨ë“  ì±„ë„ì— ëŒ€í•œ ì¶©ëŒ ì‘ë‹µ ë¬´ì‹œ
+	WeaponMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic); //ì¶©ëŒ ì±„ë„ ì„¤ì •
+	//#01.11.18ì‹œ# ë¬´ê¸° ì˜¤ë¸Œì íŠ¸ ë°”ë‹¥ ëš«ê³  ê°€ëŠ” í˜„ìƒ ë²„ê·¸ í”½ìŠ¤//
+	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block); //WorldStatic ì±„ë„ì— ëŒ€í•´ ì°¨ë‹¨ ì‘ë‹µ ì„¤ì •
+	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block); //WorldStatic ì±„ë„ì— ëŒ€í•´ ì°¨ë‹¨ ì‘ë‹µ ì„¤ì •
+	//#01.11.18ì‹œ# ë¬´ê¸° ì˜¤ë¸Œì íŠ¸ ë°”ë‹¥ ëš«ê³  ê°€ëŠ” í˜„ìƒ ë²„ê·¸ í”½ìŠ¤//
+	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block); //Visibility ì±„ë„ì— ëŒ€í•´ ì°¨ë‹¨ ì‘ë‹µ ì„¤ì •
+	WeaponMesh->SetGenerateOverlapEvents(true); //ê²¹ì¹¨ ì´ë²¤íŠ¸ ìƒì„± í™œì„±í™”
 
-	//PickupSphere ÄÄÆ÷³ÍÆ® »ı¼º ¹× ¼³Á¤
+	//PickupSphere ì»´í¬ë„ŒíŠ¸ ìƒì„± ë° ì„¤ì •
 	PickupSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PickupSphere"));
-	PickupSphere->SetupAttachment(RootComponent); //·çÆ® ÄÄÆ÷³ÍÆ®
-	PickupSphere->SetSphereRadius(PickupSphereRadius); //ÇÈ¾÷ ½ºÇÇ¾î ¹İÁö¸§ ¼³Á¤
-	PickupSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); //Äõ¸®	Àü¿ë Ãæµ¹ ¼³Á¤
-	PickupSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore); //¸ğµç Ã¤³Î¿¡ ´ëÇÑ Ãæµ¹ ÀÀ´ä ¹«½Ã
+	PickupSphere->SetupAttachment(RootComponent); //ë£¨íŠ¸ ì»´í¬ë„ŒíŠ¸
+	PickupSphere->SetSphereRadius(PickupSphereRadius); //í”½ì—… ìŠ¤í”¼ì–´ ë°˜ì§€ë¦„ ì„¤ì •
+	PickupSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); //ì¿¼ë¦¬	ì „ìš© ì¶©ëŒ ì„¤ì •
+	PickupSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore); //ëª¨ë“  ì±„ë„ì— ëŒ€í•œ ì¶©ëŒ ì‘ë‹µ ë¬´ì‹œ
 	PickupSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-	PickupSphere->SetGenerateOverlapEvents(true); //°ãÄ§ ÀÌº¥Æ® »ı¼º È°¼ºÈ­
+	PickupSphere->SetGenerateOverlapEvents(true); //ê²¹ì¹¨ ì´ë²¤íŠ¸ ìƒì„± í™œì„±í™”
 }
 
 void AWeaponBase::OnEquipped(ACharacter* NewOwner)
 {
-	SetOwner(Cast<APawn>(NewOwner)); //¼ÒÀ¯ÀÚ ¼³Á¤
-	SetInstigator(Cast<APawn>(NewOwner)); //ÀÎ½ºÆ¼°ÔÀÌÅÍ ¼³Á¤
-	SetActorEnableCollision(false); //¾×ÅÍ Ãæµ¹ ºñÈ°¼ºÈ­
+	SetOwner(Cast<APawn>(NewOwner)); //ì†Œìœ ì ì„¤ì •
+	SetInstigator(Cast<APawn>(NewOwner)); //ì¸ìŠ¤í‹°ê²Œì´í„° ì„¤ì •
+	SetActorEnableCollision(false); //ì•¡í„° ì¶©ëŒ ë¹„í™œì„±í™”
 
 	if (WeaponMesh) {
-		WeaponMesh->SetSimulatePhysics(false); //¹°¸® ½Ã¹Ä·¹ÀÌ¼Ç ºñÈ°¼ºÈ­
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); //Ãæµ¹ ºñÈ°¼ºÈ­
-		WeaponMesh->SetGenerateOverlapEvents(false); //°ãÄ§ ÀÌº¥Æ® ºñÈ°¼ºÈ­
+		WeaponMesh->SetSimulatePhysics(false); //ë¬¼ë¦¬ ì‹œë®¬ë ˆì´ì…˜ ë¹„í™œì„±í™”
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); //ì¶©ëŒ ë¹„í™œì„±í™”
+		WeaponMesh->SetGenerateOverlapEvents(false); //ê²¹ì¹¨ ì´ë²¤íŠ¸ ë¹„í™œì„±í™”
 	}
 	if (PickupSphere) {
-		PickupSphere->SetGenerateOverlapEvents(false); //°ãÄ§ ÀÌº¥Æ® ºñÈ°¼ºÈ­
-		PickupSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision); //Ãæµ¹ ºñÈ°¼ºÈ­
+		PickupSphere->SetGenerateOverlapEvents(false); //ê²¹ì¹¨ ì´ë²¤íŠ¸ ë¹„í™œì„±í™”
+		PickupSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision); //ì¶©ëŒ ë¹„í™œì„±í™”
 	}
 
 }
 
 void AWeaponBase::OnUnequipped(bool bDropToWorld)
 {
-	SetOwner(nullptr); //¼ÒÀ¯ÀÚ ÇØÁ¦
-	SetInstigator(nullptr); //ÀÎ½ºÆ¼°ÔÀÌÅÍ ÇØÁ¦
-	if (!WeaponMesh) return; //¹«±â ¸Ş½¬°¡ À¯È¿ÇÏÁö ¾ÊÀ¸¸é ¹İÈ¯
-	SetActorEnableCollision(bDropToWorld); //¾×ÅÍ Ãæµ¹ ¼³Á¤
+	SetOwner(nullptr); //ì†Œìœ ì í•´ì œ
+	SetInstigator(nullptr); //ì¸ìŠ¤í‹°ê²Œì´í„° í•´ì œ
+	if (!WeaponMesh) return; //ë¬´ê¸° ë©”ì‰¬ê°€ ìœ íš¨í•˜ì§€ ì•Šìœ¼ë©´ ë°˜í™˜
+	SetActorEnableCollision(bDropToWorld); //ì•¡í„° ì¶©ëŒ ì„¤ì •
 	if (bDropToWorld) {
-		WeaponMesh->SetSimulatePhysics(true); //¹°¸® ½Ã¹Ä·¹ÀÌ¼Ç È°¼ºÈ­
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); //Ãæµ¹ È°¼ºÈ­
-		WeaponMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic); //Ãæµ¹ Ã¤³Î ¼³Á¤
-		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore); //¸ğµç Ã¤³Î¿¡ ´ëÇÑ Ãæµ¹ ÀÀ´ä ¹«½Ã
-		//#01.11.18½Ã# ¹«±â ¿ÀºêÁ§Æ® ¹Ù´Ú ¶Õ°í °¡´Â Çö»ó ¹ö±× ÇÈ½º//
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block); //WorldStatic Ã¤³Î¿¡ ´ëÇØ Â÷´Ü ÀÀ´ä ¼³Á¤
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block); //WorldStatic Ã¤³Î¿¡ ´ëÇØ Â÷´Ü ÀÀ´ä ¼³Á¤
-		WeaponMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);//Visibility Ã¤³Î¿¡ ´ëÇØ Â÷´Ü ÀÀ´ä ¼³Á¤
-		//#01.11.18½Ã# ¹«±â ¿ÀºêÁ§Æ® ¹Ù´Ú ¶Õ°í °¡´Â Çö»ó ¹ö±× ÇÈ½º//
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap); //Pawn Ã¤³Î¿¡ ´ëÇØ °ãÄ§ ÀÀ´ä ¼³Á¤
-		WeaponMesh->SetGenerateOverlapEvents(true); //°ãÄ§ ÀÌº¥Æ® »ı¼º È°¼ºÈ­
+		WeaponMesh->SetSimulatePhysics(true); //ë¬¼ë¦¬ ì‹œë®¬ë ˆì´ì…˜ í™œì„±í™”
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); //ì¶©ëŒ í™œì„±í™”
+		WeaponMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic); //ì¶©ëŒ ì±„ë„ ì„¤ì •
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore); //ëª¨ë“  ì±„ë„ì— ëŒ€í•œ ì¶©ëŒ ì‘ë‹µ ë¬´ì‹œ
+		//#01.11.18ì‹œ# ë¬´ê¸° ì˜¤ë¸Œì íŠ¸ ë°”ë‹¥ ëš«ê³  ê°€ëŠ” í˜„ìƒ ë²„ê·¸ í”½ìŠ¤//
+		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block); //WorldStatic ì±„ë„ì— ëŒ€í•´ ì°¨ë‹¨ ì‘ë‹µ ì„¤ì •
+		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block); //WorldStatic ì±„ë„ì— ëŒ€í•´ ì°¨ë‹¨ ì‘ë‹µ ì„¤ì •
+		WeaponMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);//Visibility ì±„ë„ì— ëŒ€í•´ ì°¨ë‹¨ ì‘ë‹µ ì„¤ì •
+		//#01.11.18ì‹œ# ë¬´ê¸° ì˜¤ë¸Œì íŠ¸ ë°”ë‹¥ ëš«ê³  ê°€ëŠ” í˜„ìƒ ë²„ê·¸ í”½ìŠ¤//
+		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap); //Pawn ì±„ë„ì— ëŒ€í•´ ê²¹ì¹¨ ì‘ë‹µ ì„¤ì •
+		WeaponMesh->SetGenerateOverlapEvents(true); //ê²¹ì¹¨ ì´ë²¤íŠ¸ ìƒì„± í™œì„±í™”
 	}
 	else {
-		WeaponMesh->SetSimulatePhysics(false); //¹°¸® ½Ã¹Ä·¹ÀÌ¼Ç ºñÈ°¼ºÈ­
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); //Ãæµ¹ ºñÈ°¼ºÈ­
-		WeaponMesh->SetGenerateOverlapEvents(false); //°ãÄ§ ÀÌº¥Æ® ºñÈ°¼ºÈ­
+		WeaponMesh->SetSimulatePhysics(false); //ë¬¼ë¦¬ ì‹œë®¬ë ˆì´ì…˜ ë¹„í™œì„±í™”
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); //ì¶©ëŒ ë¹„í™œì„±í™”
+		WeaponMesh->SetGenerateOverlapEvents(false); //ê²¹ì¹¨ ì´ë²¤íŠ¸ ë¹„í™œì„±í™”
 	}
 	if (PickupSphere) {
-		const ECollisionEnabled::Type NewEnabled = bDropToWorld ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision; //»õ Ãæµ¹ ¼³Á¤ °áÁ¤
-		PickupSphere->SetCollisionEnabled(NewEnabled); //Ãæµ¹ ¼³Á¤
-		PickupSphere->SetGenerateOverlapEvents(bDropToWorld); //°ãÄ§ ÀÌº¥Æ® ¼³Á¤
+		const ECollisionEnabled::Type NewEnabled = bDropToWorld ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision; //ìƒˆ ì¶©ëŒ ì„¤ì • ê²°ì •
+		PickupSphere->SetCollisionEnabled(NewEnabled); //ì¶©ëŒ ì„¤ì •
+		PickupSphere->SetGenerateOverlapEvents(bDropToWorld); //ê²¹ì¹¨ ì´ë²¤íŠ¸ ì„¤ì •
 	}
 }
 
 void AWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
-	if (PickupSphere)
+	if(PickupSphere)
 	{
-		PickupSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeaponBase::OnPickupBegin); //ÇÈ¾÷ ½ÃÀÛ ¿À¹ö·¦ ÀÌº¥Æ® ¹ÙÀÎµù
-		PickupSphere->OnComponentEndOverlap.AddDynamic(this, &AWeaponBase::OnPickupEnd); //ÇÈ¾÷ Á¾·á ¿À¹ö·¦ ÀÌº¥Æ® ¹ÙÀÎµù
+		PickupSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeaponBase::OnPickupBegin); //í”½ì—… ì‹œì‘ ì˜¤ë²„ë© ì´ë²¤íŠ¸ ë°”ì¸ë”©
+		PickupSphere->OnComponentEndOverlap.AddDynamic(this, &AWeaponBase::OnPickupEnd); //í”½ì—… ì¢…ë£Œ ì˜¤ë²„ë© ì´ë²¤íŠ¸ ë°”ì¸ë”©
 	}
 }
 void AWeaponBase::OnPickupBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (AQPCharacter* QPCharacter = Cast<AQPCharacter>(OtherActor)) //°ãÄ£ ¾×ÅÍ°¡ QPCharacterÀÎÁö È®ÀÎ
+	if (AQPCharacter* QPCharacter = Cast<AQPCharacter>(OtherActor)) //ê²¹ì¹œ ì•¡í„°ê°€ QPCharacterì¸ì§€ í™•ì¸
 	{
-		QPCharacter->SetOverlappingWeapon(this); //°ãÄ¡´Â ¹«±â ¼³Á¤
+		QPCharacter->SetOverlappingWeapon(this); //ê²¹ì¹˜ëŠ” ë¬´ê¸° ì„¤ì •
 	}
 }
 void AWeaponBase::OnPickupEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (AQPCharacter* QPCharacter = Cast<AQPCharacter>(OtherActor))
 	{
-		if (QPCharacter->GetOverlappingWeapon() == this) //°ãÄ¡´Â ¹«±â°¡ ÇöÀç ¹«±âÀÎÁö È®ÀÎ
+		if (QPCharacter->GetOverlappingWeapon() == this) //ê²¹ì¹˜ëŠ” ë¬´ê¸°ê°€ í˜„ì¬ ë¬´ê¸°ì¸ì§€ í™•ì¸
 		{
-			QPCharacter->SetOverlappingWeapon(nullptr); //°ãÄ¡´Â ¹«±â ÇØÁ¦
+			QPCharacter->SetOverlappingWeapon(nullptr); //ê²¹ì¹˜ëŠ” ë¬´ê¸° í•´ì œ
 		}
 	}
 }
@@ -115,10 +115,10 @@ void AWeaponBase::Tick(float DeltaTime)
 }
 void AWeaponBase::StartFire_Implementation()
 {
-	//ÀÚ½Ä Å¬·¡½º ÀÛ¼º or ºí·çÇÁ¸°Æ®
+	//ìì‹ í´ë˜ìŠ¤ ì‘ì„± or ë¸”ë£¨í”„ë¦°íŠ¸
 }
 
 void AWeaponBase::StopAttack_Implementation()
 {
-	//ÀÚ½Ä Å¬·¡½º ÀÛ¼º or ºí·çÇÁ¸°Æ®
+	//ìì‹ í´ë˜ìŠ¤ ì‘ì„± or ë¸”ë£¨í”„ë¦°íŠ¸
 }
