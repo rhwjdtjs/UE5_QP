@@ -1,13 +1,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/Engine.h"
 #include "QPCombatTypes.generated.h"
 
 UENUM(BlueprintType)
-enum class EQPWeaponType : uint8 //ë¬´ê¸° íƒ€ì… ì—´ê±°í˜•
+enum class EQPWeaponType : uint8 //¹«±â Å¸ÀÔ ¿­°ÅÇü
 {
-	EWT_None UMETA(DisplayName = "None"), //ë¬´ê¸° ì—†ìŒ
-	EWT_Melee UMETA(DisplayName = "Melee"), //ê·¼ì ‘ ë¬´ê¸°
-	EWT_Gun UMETA(DisplayName = "Gun"), //ì´ê¸°
+	EWT_None UMETA(DisplayName = "None"), //¹«±â ¾øÀ½
+	EWT_Melee UMETA(DisplayName = "Melee"), //±ÙÁ¢ ¹«±â
+	EWT_Gun UMETA(DisplayName = "Gun"), //ÃÑ±â
 };
+
