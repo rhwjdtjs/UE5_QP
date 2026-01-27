@@ -27,14 +27,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	FORCEINLINE EQPWeaponType GetWeaponType() const { return Weapontype; } //장착된 무기 타입 반환 함수
 	UFUNCTION(BlueprintPure, Category = "Combat")
-	FORCEINLINE bool IsSprinting() const { return bWantsToSprint && MoveInputVector.X > 0.f; } //앞으로 달리기는 중인지 반환 함수
-	bool IsAiming(); //조준 중인지
-
-	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; } // 현재 애니메이션 오프셋의 Yaw 값을 반환
-	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; } // 현재 애니메이션 오프셋의 Pitch 값을 반환
-
-	void PlayFireMontage(bool bAming); // 무기 발사 몽타주 재생 함수
-
 	FORCEINLINE bool IsSprinting() const {
 		/**
 		 * Sprint 조건:
@@ -49,6 +41,12 @@ public:
 	void SetOverlappingWorldItem(class AWorldItemActor* WorldItem); //겹쳐진 월드 아이템 설정 함수
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Pickup")
 	class AWorldItemActor* GetOverlappingWorldItem() const { return OverlappingWorldItem; } //겹쳐진 월드 아이템 반환 함수
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Context")
+	void EquipInventoryItemAt(const FIntPoint& Cell); //인벤토리 아이템 장착 함수
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Context")
+	void DropInventoryItemAt(const FIntPoint& Cell); //인벤토리 아이템 버리기 함수
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override; //앉기 시작시 호출
@@ -75,11 +73,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float CrouchSprintSpeed = 700.f; //앉은 상태에서 달리기 속도
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn") // 제자리 회전 관련
-		float RootYawOffset = 0.f;
-
-	FRotator StartingAimRotation; //시작 에임 회전 값
-
 	//앉기 카메라 변수들
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Crouch")
 	FVector StandingCameraOffset = FVector::ZeroVector; //서있을 때 카메라 오프셋
@@ -93,9 +86,6 @@ protected:
 	float EquipTraceDistance = 250.f; //무기 장착 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Weapon")
 	bool bDrawEquipTraceDebug = false; //무기 장착 거리 디버그 선 그리기 여부
-	UPROPERTY(EditAnywhere, Category = "Animation") //무기 발사 몽타주
-		class UAnimMontage* FireWeaponMontage; //무기 발사 몽타주
-
 	//입력 함수들
 	void MoveForward(float Value); //앞뒤 이동
 	void MoveRight(float Value); //좌우 이동
@@ -113,9 +103,10 @@ protected:
 	void TryStorePickupToInventory(); //아이템을 인벤토리에 저장 시도
 	void AttackPressed(); //공격 버튼 눌림
 	void AttackReleased(); //공격 버튼 떼짐
-	void AimButtonPressed(); //조준 버튼 눌림
-	void AimButtonReleased(); //조준 버튼 떼짐
-	void AimOffset(float DeltaTime); //에임오프셋 계산
+	void DropPressed(); //버리기 버튼 눌림
+	void DropReleased(); //버리기 버튼 떼짐
+	void OnDropHoldTriggered(); //버리기 홀드 트리거
+	void TryDropEquipped(); //실제 드랍 실행 로직 함수
 private:
 	void UpdateMovementSpeed(); //움직임 속도 업데이트
 	bool bWantsToSprint = false; //달리기 의사 여부
@@ -127,10 +118,6 @@ private:
 
 	UPROPERTY()
 	class AWorldItemActor* OverlappingWorldItem = nullptr; //겹쳐진 월드 아이템 액터
-	float AO_Yaw; //애니메이션 오프셋 Yaw 값
-	float AO_Pitch; //애니메이션 오프셋 Pitch 값
-	FRotator StartingAimRotaion; //시작 에임 회전 값
-
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInventoryComponent> InventoryComponent; //인벤토리 컴포넌트
@@ -141,4 +128,10 @@ private:
 	bool bEquipKeyDown = false; //장착 키가 눌려있는지 여부
 	bool bEquipHoldConsumed = false; //홀드로 이미 처리 했는지 확인 불리언 값
 
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	float DropHoldThreshhold = 0.30f; //G를 이 시간 이상 누르면 드랍
+	
+	FTimerHandle DropHoldTimerHandle; //드랍 홀드 타이머 핸들
+	bool bDropKeyDown = false; //드랍 키가 눌려있는지 여부
+	bool bDropHoldConsumed = false; //홀드로 이미 처리 했는지 확인 불리언 값
 };

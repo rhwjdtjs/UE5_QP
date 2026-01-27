@@ -29,4 +29,6 @@ public:
 	//FintPoint =  언리얼 엔진의 2D 정수 좌표/크기를 표현하는 구조체 
 	//기본 구조 int32 X(가로 칸수); int32 Y(세로 칸수) ;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|Weapon", meta = (DisplayName = "Weapon"))
+	TSubclassOf<class AWeaponBase> WeaponClass; //무기 아이템일 경우 무기 클래스 참조
 };

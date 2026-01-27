@@ -2,7 +2,6 @@
 #include "GameFramework/Character.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "PJ_Quiet_Protocol/Weapons/WeaponBase.h"
-#include "PJ_Quiet_Protocol/Character/QPCharacter.h"
 
 UQPCombatComponent::UQPCombatComponent()
 {
@@ -62,12 +61,6 @@ void UQPCombatComponent::StartAttack()
 	}
 	SetIsAttacking(true); //공격 상태 true로 설정
 	EquippedWeapon->StartFire(); //무기 발사 시작
-
-	if (AQPCharacter* QPChar = Cast<AQPCharacter>(OwnerCharacter)) //애니메이션 재생
-	{
-		QPChar->PlayFireMontage(bIsAiming); //조준 상태에 따라 발사 몽타주 재생
-	}
-
 }
 void UQPCombatComponent::StopAttack()
 {
@@ -103,16 +96,3 @@ void UQPCombatComponent::SetIsAttacking(bool bNewIsAttacking)
 	OnAttackStateChanged.Broadcast(bIsAttacking); //공격 상태 변경 델리게이트 브로드캐스트
 }
 
-void UQPCombatComponent::SetAiming(bool bNewAiming) //조준 상태 설정 함수
-{
-	if (bIsAiming == bNewAiming) return; //이미 같은 상태이면 반환
-
-	SetIsAiming(bNewAiming); //조준 상태 설정
-}
-
-void UQPCombatComponent::SetIsAiming(bool bNewIsAiming) 
-{
-	bIsAiming = bNewIsAiming; //조준 상태 설정
-
-	OnAimStateChanged.Broadcast(bIsAiming); //조준 상태 변경 델리게이트 브로드캐스트
-}

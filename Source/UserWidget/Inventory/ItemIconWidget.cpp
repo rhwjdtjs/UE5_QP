@@ -8,6 +8,9 @@
 #include "InventoryDragOperation.h"
 #include "ItemDragVisualWidget.h"
 #include "InventoryGridWidget.h"
+#include "PJ_Quiet_Protocol/Character/QPCharacter.h"
+#include "InventoryContextMenuWidget.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 void UItemIconWidget::Setup(UInventoryComponent* InInventory, UItemDataAsset* InItemData, int32 InQuantity, const FIntPoint& InFrom, const FIntPoint& InItemSize, float InCellSize, TSubclassOf<UUserWidget> InDragVisualClass, UInventoryGridWidget* InOwningGrid)
 {
@@ -29,11 +32,57 @@ void UItemIconWidget::Setup(UInventoryComponent* InInventory, UItemDataAsset* In
 
 FReply UItemIconWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	// 좌클릭 드래그 감지
-	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)) // 좌클릭이 눌렸는지 확인
+	if (InMouseEvent.IsMouseButtonDown(EKeys::RightMouseButton)) //우클릭: 컨텍스트 메뉴 열기
 	{
-		return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply; // 드래그 감지
+		if (!ContextMenuClass) return FReply::Handled(); // 컨텍스트 메뉴 클래스가 유효한지 확인
+
+		if (OpenedMenu) // 이미 열려있는 메뉴가 있으면 닫기
+		{
+			OpenedMenu->RemoveFromParent(); // 메뉴 제거
+			OpenedMenu = nullptr; // 포인터 초기화
+		}
+
+		OpenedMenu = CreateWidget<UInventoryContextMenuWidget>(GetOwningPlayer(), ContextMenuClass); // 컨텍스트 메뉴 위젯 생성
+		if (!OpenedMenu) return FReply::Handled(); // 메뉴 생성 실패 시 처리
+
+		OpenedMenu->InitMenu(From); // 메뉴 초기화
+
+		OpenedMenu->OnEquip.BindLambda([this](const FIntPoint& Cell) //아이템 장착 콜백 바인딩
+			{
+				if (AQPCharacter* Character = Cast<AQPCharacter>(GetOwningPlayerPawn())) // 플레이어 폰을 QPCharacter로 캐스팅
+				{
+					Character->EquipInventoryItemAt(Cell); // 아이템 장착
+				}
+			});
+
+		OpenedMenu->OnDrop.BindLambda([this](const FIntPoint& Cell) //아이템 버리기 콜백 바인딩
+			{
+				if (AQPCharacter* Character = Cast<AQPCharacter>(GetOwningPlayerPawn())) // 플레이어 폰을 QPCharacter로 캐스팅
+				{
+					Character->DropInventoryItemAt(Cell); // 아이템 버리기
+				}
+			});
+
+		OpenedMenu->AddToViewport(9999); // 메뉴를 뷰포트에 추가
+
+		APlayerController* PlayerController = GetOwningPlayer(); // 플레이어 컨트롤러 가져오기
+		if (!PlayerController) return FReply::Handled(); // 플레이어 컨트롤러
+		float X = 0.f, Y = 0.f;
+		if(PlayerController->GetMousePosition(X, Y)) // 마우스 위치 가져오기
+		{
+			const FVector2D MousePosition(X, Y); // 마우스 위치 설정
+			OpenedMenu->SetPositionInViewport(MousePosition, false); // 메뉴 위치 설정
+		}
+
+		OpenedMenu->SetKeyboardFocus(); // 메뉴에 키보드 포커스 설정
+		return FReply::Handled(); // 처리 완료 반환
 	}
+
+	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)) // 좌클릭: 드래그 시작
+	{
+		return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply; // 드래그 감지 시작
+	}
+
 	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent); // 기본 동작 호출
 }
 
@@ -84,6 +133,11 @@ bool UItemIconWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 		return OwningGrid->HandleDropFromScreenPos(InOperation, ScreenPos); // 드롭 처리
 	}
 	return false; // 드롭 처리 실패 반환
+}
+
+void UItemIconWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	Super::NativeOnDragCancelled(InDragDropEvent, InOperation); // 기본 동작 호출
 }
 
 void UItemIconWidget::ApplyVisual()

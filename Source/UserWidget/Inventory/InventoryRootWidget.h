@@ -13,7 +13,7 @@ class PJ_QUIET_PROTOCOL_API UInventoryRootWidget : public UUserWidget
 protected:
 	virtual void NativeConstruct() override; // 위젯이 생성될때 불림
 	virtual void NativeDestruct() override; // 위젯이 파괴될때 불림
-
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override; // 드롭 처리
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UInventoryGridWidget> InventoryGrid; // 인벤토리 그리드 위젯 바인딩
 

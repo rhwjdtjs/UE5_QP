@@ -24,6 +24,7 @@ protected:
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override; // 드래그 시작을 위해 필요
 	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override; // 드래그 시작
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override; // 드롭 처리
+	virtual void NativeOnDragCancelled(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override; // 드래그 취소 처리
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<class UImage> ItemImage; // 아이템 이미지
@@ -55,6 +56,11 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<class UInventoryGridWidget> OwningGrid = nullptr; // 소유한 그리드 위젯
+
+	UPROPERTY(EditDefaultsOnly, Category="Inventory|UI")
+	TSubclassOf<class UInventoryContextMenuWidget> ContextMenuClass; // 컨텍스트 메뉴
+	UPROPERTY(Transient)
+	TObjectPtr<class UInventoryContextMenuWidget> OpenedMenu; // 컨텍스트 메뉴 인스턴스
 
 	void ApplyVisual(); // 시각적 요소 적용
 };

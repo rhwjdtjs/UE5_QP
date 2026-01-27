@@ -2,7 +2,7 @@
 #include "InventoryGridWidget.h"
 #include "PJ_Quiet_Protocol/Character/QPCharacter.h"
 #include "PJ_Quiet_Protocol/Inventory/InventoryComponent.h"
-
+#include "InventoryDragOperation.h" 
 
 void UInventoryRootWidget::NativeConstruct()
 {
@@ -30,6 +30,35 @@ void UInventoryRootWidget::NativeDestruct()
 		CachedInventory = nullptr; // 캐시된 인벤토리 포인터 초기화
 	}
 	Super::NativeDestruct(); // 부모 클래스의 NativeDestruct 호출
+}
+
+bool UInventoryRootWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	if (!InOperation) return false; // 오퍼레이션이 없으면 실패
+	if (!InventoryGrid) return false; // 그리드가 없으면 실패
+
+	UInventoryDragOperation* DragOp = Cast<UInventoryDragOperation>(InOperation); // 인벤 드래그인지 캐스팅
+	if (!DragOp) return false; // 인벤 드래그가 아니면 실패
+	if (!DragOp->SourceInventory) return false; // 소스 인벤이 없으면 실패
+
+	const FVector2D ScreenPos = InDragDropEvent.GetScreenSpacePosition(); // 드랍된 화면 좌표
+
+	const FGeometry GridGeo = InventoryGrid->GetCachedGeometry(); // 그리드의 지오메트리
+	const bool bOverGrid = GridGeo.IsUnderLocation(ScreenPos); // 드랍 위치가 그리드 위인지 확인
+
+	if (bOverGrid)
+	{
+		//그리드 위에 떨어졌으면 그리드가 정상적으로 Move 또는 Add 처리
+		return InventoryGrid->HandleDropFromScreenPos(InOperation, ScreenPos); // 그리드로 전달
+	}
+
+	//그리드 밖으로 떨어졌으면 월드로 드랍 처리
+	AQPCharacter* Character = Cast<AQPCharacter>(GetOwningPlayerPawn()); // 소유 캐릭터
+	if (!Character) return false; // 캐릭터가 없으면 실패
+
+	Character->DropInventoryItemAt(DragOp->FromCell); // 인벤 아이템을 월드로 드랍
+
+	return true; // 드랍 처리 완료
 }
 
 void UInventoryRootWidget::HandleInventoryChanged()

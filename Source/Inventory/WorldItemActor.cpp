@@ -2,24 +2,32 @@
 #include "Components/SphereComponent.h"
 #include "Components/SceneComponent.h"
 #include "PJ_Quiet_Protocol/Character/QPCharacter.h"
-
+#include "Components/SkeletalMeshComponent.h"
 AWorldItemActor::AWorldItemActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	ItemData = nullptr; //아이템 정보 초기화
-	Quantity = 1; //아이템 수량 초기화
-
-	Root = CreateDefaultSubobject<USceneComponent>(TEXT("RootSceneComponent")); //루트 씬 컴포넌트 생성
-	SetRootComponent(Root);
+	ItemData = nullptr;
+	Quantity = 1;
+	ItemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ItemMesh")); //아이템 메쉬 컴포넌트 생성
+	ItemMesh->SetupAttachment(RootComponent); //루트 컴포넌트에 부착
+	ItemMesh->SetSimulatePhysics(true); //물리 시뮬레이션 활성화
+	ItemMesh->SetEnableGravity(true); //중력 활성화
+	ItemMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); //충돌 활성화
+	ItemMesh->SetCollisionObjectType(ECC_WorldDynamic); //충돌 객체 타입 설정
+	ItemMesh->SetCollisionResponseToAllChannels(ECR_Block); //모든 채널에 블록 응답 설정
+	ItemMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); //플레이어 채널에 무시 응답 설정
 
 	PickupSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PickupSphere")); //픽업 스피어 컴포넌트 생성
-	PickupSphere->SetupAttachment(RootComponent); //루트 컴포넌트
-	PickupSphere->SetSphereRadius(PickupSphereRadius); //픽업 스피어 반지름 
-	PickupSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); //쿼리	전용 충돌 설정
-	PickupSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore); //모든 채널에 대한 충돌 응답 무시
-	PickupSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Overlap); //Pawn 채널에 대해 겹침 응답 설정
-	PickupSphere->SetGenerateOverlapEvents(true); //겹침 이벤트 생성 활성화
+	PickupSphere->SetupAttachment(RootComponent); //루트 컴포넌트에 부착
+	PickupSphere->SetSphereRadius(PickupSphereRadius); //픽업 스피어 반지름 설정
+
+	PickupSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 쿼리 전용 충돌 설정
+	PickupSphere->SetCollisionResponseToAllChannels(ECR_Ignore); // 모든 채널 무시
+	PickupSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap); // 플레이어와 오버랩 설정
+	PickupSphere->SetGenerateOverlapEvents(true); // 오버랩 이벤트 생성 활성화
+
+
 
 }
 
