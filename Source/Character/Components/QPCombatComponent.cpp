@@ -46,7 +46,6 @@ bool UQPCombatComponent::UnEquipWeapon(bool bDropToWorld)
 	}
 	StopAttack(); //공격 중지
 	//캐릭터 분리
-	EquippedWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform); //월드 트랜스폼 유지하며 분리
 	EquippedWeapon->OnUnequipped(bDropToWorld); //무기 해제 처리 호출
 	EquippedWeapon = nullptr; //장착된 무기 초기화
 
