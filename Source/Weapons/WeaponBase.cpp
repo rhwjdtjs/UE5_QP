@@ -11,17 +11,17 @@ AWeaponBase::AWeaponBase()
 
 	//픽업 가능하게
 	//#01.11.18시# 바닥에 떨어진 오브젝트 물리시뮬레이션 비활성화//
-	WeaponMesh->SetSimulatePhysics(false);
+	WeaponMesh->SetSimulatePhysics(true);
+	WeaponMesh->SetEnableGravity(true);
 	//#01.11.18시# 바닥에 떨어진 오브젝트 물리시뮬레이션 비활성화//
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); //충돌 활성화
-	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore); //모든 채널에 대한 충돌 응답 무시
-	WeaponMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic); //충돌 채널 설정
-	//#01.11.18시# 무기 오브젝트 바닥 뚫고 가는 현상 버그 픽스//
-	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block); //WorldStatic 채널에 대해 차단 응답 설정
-	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block); //WorldStatic 채널에 대해 차단 응답 설정
-	//#01.11.18시# 무기 오브젝트 바닥 뚫고 가는 현상 버그 픽스//
-	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block); //Visibility 채널에 대해 차단 응답 설정
-	WeaponMesh->SetGenerateOverlapEvents(true); //겹침 이벤트 생성 활성화
+	WeaponMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic); //충돌 객체 타입 설정
+	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block); //모든 채널에 대한 충돌 응답 무시
+	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore); //Pawn 채널에 대해 겹침 응답 설정
+	WeaponMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block); // 트레이스 등은 막음
+	WeaponMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block); // 바닥 막음
+	WeaponMesh->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block); // 오브젝트 막음
+	WeaponMesh->SetGenerateOverlapEvents(false); //겹침 이벤트 생성 활성화
 
 	//PickupSphere 컴포넌트 생성 및 설정
 	PickupSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PickupSphere"));

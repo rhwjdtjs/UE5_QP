@@ -66,12 +66,6 @@ void UQPCombatComponent::StartAttack()
 	}
 	SetIsAttacking(true); //공격 상태 true로 설정
 	EquippedWeapon->StartFire(); //무기 발사 시작
-
-	if (AQPCharacter* QPChar = Cast<AQPCharacter>(OwnerCharacter)) //애니메이션 재생
-	{
-		QPChar->PlayFireMontage(bIsAiming); //조준 상태에 따라 발사 몽타주 재생
-	}
-
 }
 void UQPCombatComponent::StopAttack()
 {

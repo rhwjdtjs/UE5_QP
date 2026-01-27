@@ -32,5 +32,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
+private:
+	UPROPERTY(EditAnywhere, Category = "Item")
+	TObjectPtr<class USkeletalMeshComponent> ItemMesh; //아이템 메쉬 컴포넌트
 };
