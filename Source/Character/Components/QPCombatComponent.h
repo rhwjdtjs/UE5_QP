@@ -63,6 +63,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 public:	
+
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult); //조준선 아래 충돌 검사 함수
+
+public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 private:
 	bool AttachWeaponToCharacter(AWeaponBase* Weapon); //캐릭터에 무기 부착 함수
