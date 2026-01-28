@@ -28,4 +28,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Drag")
 	FVector2D ItemPixelSize = FVector2D::ZeroVector; // 아이템 픽셀 크기
+
+	UPROPERTY(BlueprintReadWrite, Category = "Inventory/World")
+	TObjectPtr<AActor> SourceWorldItemActor; // 드래그 출처 월드 아이템 액터
 };

@@ -7,6 +7,8 @@
 #include "PJ_Quiet_Protocol/Inventory/ItemDataAsset.h"
 #include "ItemIconWidget.h"
 #include "InventoryDragOperation.h"
+#include "PJ_Quiet_Protocol/Inventory/WorldItemActor.h"
+#include "PJ_Quiet_Protocol/Weapons/WeaponBase.h"
 
 void UInventoryGridWidget::NativeConstruct()
 {
@@ -21,43 +23,16 @@ void UInventoryGridWidget::SetInventory(UInventoryComponent* InInventory)
 void UInventoryGridWidget::RefreshGrid()
 {
 	if (!Inventory || !CellsLayer || !ItemsLayer) return; // 인벤토리와 레이어가 유효한지 확인
-	UE_LOG(LogTemp, Warning, TEXT("[Grid1] Inv=%s Cells=%s Items=%s SizeBox=%s W=%d H=%d Cell=%.1f"),
-		Inventory ? TEXT("OK") : TEXT("NULL"),
-		CellsLayer ? TEXT("OK") : TEXT("NULL"),
-		ItemsLayer ? TEXT("OK") : TEXT("NULL"),
-		GridSizeBox ? TEXT("OK") : TEXT("NULL"),
-		Inventory ? Inventory->Width : -1,
-		Inventory ? Inventory->Height : -1,
-		CellSize
-	);
 	if (GridSizeBox) // GridSizeBox가 유효한지 확인
 	{
 		GridSizeBox->SetWidthOverride(Inventory->Width * CellSize); // 가로 크기 설정
 		GridSizeBox->SetHeightOverride(Inventory->Height * CellSize); // 세로 크기 설정
 	} 
-	UE_LOG(LogTemp, Warning, TEXT("[Grid2] Inv=%s Cells=%s Items=%s SizeBox=%s W=%d H=%d Cell=%.1f"),
-		Inventory ? TEXT("OK") : TEXT("NULL"),
-		CellsLayer ? TEXT("OK") : TEXT("NULL"),
-		ItemsLayer ? TEXT("OK") : TEXT("NULL"),
-		GridSizeBox ? TEXT("OK") : TEXT("NULL"),
-		Inventory ? Inventory->Width : -1,
-		Inventory ? Inventory->Height : -1,
-		CellSize
-	);
 	CellsLayer->ClearChildren(); // 셀 레이어 초기화
 	ItemsLayer->ClearChildren(); // 아이템 레이어 초기화
 
 	BuildCells(); // 셀 구성
 	BuildItems(); // 아이템 구성
-	UE_LOG(LogTemp, Warning, TEXT("[Grid3] Inv=%s Cells=%s Items=%s SizeBox=%s W=%d H=%d Cell=%.1f"),
-		Inventory ? TEXT("OK") : TEXT("NULL"),
-		CellsLayer ? TEXT("OK") : TEXT("NULL"),
-		ItemsLayer ? TEXT("OK") : TEXT("NULL"),
-		GridSizeBox ? TEXT("OK") : TEXT("NULL"),
-		Inventory ? Inventory->Width : -1,
-		Inventory ? Inventory->Height : -1,
-		CellSize
-	);
 }
 
 void UInventoryGridWidget::BuildCells()
@@ -116,10 +91,11 @@ bool UInventoryGridWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 
 bool UInventoryGridWidget::HandleDropFromScreenPos(UDragDropOperation* Operation, const FVector2D& ScreenPos)
 {
-	if (!Inventory || !Operation || !CellsLayer) return false; // 인벤토리와 오퍼레이션, 셀 레이어가 유효한지 확인
+	UE_LOG(LogTemp, Warning, TEXT("[InvGrid] HandleDropFromScreenPos ENTER"));
 
+	if (!Inventory || !Operation || !CellsLayer) return false;
 	UInventoryDragOperation* DragOp = Cast<UInventoryDragOperation>(Operation); // 드래그 오퍼레이션 캐스트
-	if (!DragOp || !DragOp->SourceInventory) return false; //	드래그 오퍼레이션과 소스 인벤토리가 유효한지 확인
+	if (!DragOp || !DragOp->ItemData) return false; // 유효성 검사
 
 	const FVector2D TopLeftScreen = ScreenPos - DragOp->DragLocalOffset; // 드롭할 아이템의 좌측 상단 스크린 좌표 계산
 
@@ -140,24 +116,77 @@ bool UInventoryGridWidget::HandleDropFromScreenPos(UDragDropOperation* Operation
 	}
 
 	bool bResult = false; // 결과 플래그 초기화
-	if (DragOp->SourceInventory == Inventory) bResult = Inventory->MoveItem(DragOp->FromCell, ToCell); // 같은 인벤토리 내에서 이동하는 경우
-	else
+	
+	if(DragOp->SourceInventory) // 소스 인벤토리가 유효한지 확인
 	{
-		// 다른 인벤토리에서 넘어오는 경우(월드/다른 그리드 등)
-		if (Inventory->AddItemAt(DragOp->ItemData, DragOp->Quantity, ToCell))
+		if (DragOp->SourceInventory == Inventory) {
+			bResult = Inventory->MoveItem(DragOp->FromCell, ToCell); // 같은 인벤토리 내에서 이동
+			UE_LOG(LogTemp, Warning, TEXT("[InvGrid] AddItemAt FAILED: ToCell=(%d,%d) ItemSize=(%d,%d) CellSize=%.1f"),
+				ToCell.X, ToCell.Y,
+				DragOp->ItemData->ItemSize.X, DragOp->ItemData->ItemSize.Y,
+				CellSize);
+			UE_LOG(LogTemp, Warning, TEXT("[InvGrid] Drop: SourceInv=%s SourceWorld=%s Item=%s Qty=%d"),
+				DragOp->SourceInventory ? TEXT("YES") : TEXT("NO"),
+				DragOp->SourceWorldItemActor ? TEXT("YES") : TEXT("NO"),
+				DragOp->ItemData ? *DragOp->ItemData->GetName() : TEXT("NULL"),
+				DragOp->Quantity);
+		}
+		else {
+			if(Inventory->AddItemAt(DragOp->ItemData, DragOp->Quantity, ToCell)) // 다른 인벤토리에서 추가 시도
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[InvGrid] AddItemAt FAILED: ToCell=(%d,%d) ItemSize=(%d,%d) CellSize=%.1f"),
+					ToCell.X, ToCell.Y,
+					DragOp->ItemData->ItemSize.X, DragOp->ItemData->ItemSize.Y,
+					CellSize);
+				UE_LOG(LogTemp, Warning, TEXT("[InvGrid] Drop: SourceInv=%s SourceWorld=%s Item=%s Qty=%d"),
+					DragOp->SourceInventory ? TEXT("YES") : TEXT("NO"),
+					DragOp->SourceWorldItemActor ? TEXT("YES") : TEXT("NO"),
+					DragOp->ItemData ? *DragOp->ItemData->GetName() : TEXT("NULL"),
+					DragOp->Quantity);
+				bResult = DragOp->SourceInventory->RemoveItemAt(DragOp->FromCell); // 소스 인벤토리에서 제거
+				bResult = true; // 성공 플래그 설정
+			}
+		}
+	}
+	else if (DragOp->SourceWorldItemActor) {
+		if(Inventory->AddItemAt(DragOp->ItemData, DragOp->Quantity, ToCell)) // 월드 아이템에서 추가 시도
 		{
-			DragOp->SourceInventory->RemoveItemAt(DragOp->FromCell); // 원본 인벤토리에서 아이템 제거
+			UE_LOG(LogTemp, Warning, TEXT("[InvGrid] AddItemAt FAILED: ToCell=(%d,%d) ItemSize=(%d,%d) CellSize=%.1f"),
+				ToCell.X, ToCell.Y,
+				DragOp->ItemData->ItemSize.X, DragOp->ItemData->ItemSize.Y,
+				CellSize);
+			UE_LOG(LogTemp, Warning, TEXT("[InvGrid] Drop: SourceInv=%s SourceWorld=%s Item=%s Qty=%d"),
+				DragOp->SourceInventory ? TEXT("YES") : TEXT("NO"),
+				DragOp->SourceWorldItemActor ? TEXT("YES") : TEXT("NO"),
+				DragOp->ItemData ? *DragOp->ItemData->GetName() : TEXT("NULL"),
+				DragOp->Quantity);
+			DragOp->SourceWorldItemActor->Destroy(); // 월드 아이템 액터 파괴
 			bResult = true; // 성공 플래그 설정
 		}
 	}
-
-	if (bResult) // 성공한 경우 그리드 새로고침
+	if(bResult)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[InvGrid] AddItemAt FAILED: ToCell=(%d,%d) ItemSize=(%d,%d) CellSize=%.1f"),
+			ToCell.X, ToCell.Y,
+			DragOp->ItemData->ItemSize.X, DragOp->ItemData->ItemSize.Y,
+			CellSize);
+		UE_LOG(LogTemp, Warning, TEXT("[InvGrid] Drop: SourceInv=%s SourceWorld=%s Item=%s Qty=%d"),
+			DragOp->SourceInventory ? TEXT("YES") : TEXT("NO"),
+			DragOp->SourceWorldItemActor ? TEXT("YES") : TEXT("NO"),
+			DragOp->ItemData ? *DragOp->ItemData->GetName() : TEXT("NULL"),
+			DragOp->Quantity);
 		RefreshGrid(); // 그리드 새로고침
 	}
-
-	return bResult; // 결과 반환
-	
+	UE_LOG(LogTemp, Warning, TEXT("[InvGrid] AddItemAt FAILED: ToCell=(%d,%d) ItemSize=(%d,%d) CellSize=%.1f"),
+		ToCell.X, ToCell.Y,
+		DragOp->ItemData->ItemSize.X, DragOp->ItemData->ItemSize.Y,
+		CellSize);
+	UE_LOG(LogTemp, Warning, TEXT("[InvGrid] Drop: SourceInv=%s SourceWorld=%s Item=%s Qty=%d"),
+		DragOp->SourceInventory ? TEXT("YES") : TEXT("NO"),
+		DragOp->SourceWorldItemActor ? TEXT("YES") : TEXT("NO"),
+		DragOp->ItemData ? *DragOp->ItemData->GetName() : TEXT("NULL"),
+		DragOp->Quantity);
+	return bResult;
 }
 
 bool UInventoryGridWidget::ScreenToCell(const FVector2D& ScreenPos, FIntPoint& OutCell) const

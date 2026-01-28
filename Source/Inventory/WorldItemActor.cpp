@@ -6,20 +6,22 @@
 AWorldItemActor::AWorldItemActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root")); //루트 씬 컴포넌트 생성
+	SetRootComponent(Root); //루트 컴포넌트 설정
 
 	ItemData = nullptr;
 	Quantity = 1;
 	ItemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ItemMesh")); //아이템 메쉬 컴포넌트 생성
-	ItemMesh->SetupAttachment(RootComponent); //루트 컴포넌트에 부착
+	ItemMesh->SetupAttachment(Root); //루트 컴포넌트에 부착
 	ItemMesh->SetSimulatePhysics(true); //물리 시뮬레이션 활성화
 	ItemMesh->SetEnableGravity(true); //중력 활성화
 	ItemMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); //충돌 활성화
 	ItemMesh->SetCollisionObjectType(ECC_WorldDynamic); //충돌 객체 타입 설정
 	ItemMesh->SetCollisionResponseToAllChannels(ECR_Block); //모든 채널에 블록 응답 설정
 	ItemMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); //플레이어 채널에 무시 응답 설정
-
+	ItemMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore); //카메라 채널에 무시 응답 설정
 	PickupSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PickupSphere")); //픽업 스피어 컴포넌트 생성
-	PickupSphere->SetupAttachment(RootComponent); //루트 컴포넌트에 부착
+	PickupSphere->SetupAttachment(Root); //루트 컴포넌트에 부착
 	PickupSphere->SetSphereRadius(PickupSphereRadius); //픽업 스피어 반지름 설정
 
 	PickupSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 쿼리 전용 충돌 설정
@@ -35,6 +37,7 @@ void AWorldItemActor::OnPickupBegin(UPrimitiveComponent* OverlappedComp, AActor*
 {
 	if (AQPCharacter* QPCharacter = Cast<AQPCharacter>(OtherActor)) //겹친 액터가 QPCharacter인지 확인
 	{
+		UE_LOG(LogTemp, Warning, TEXT("World Item overlapped with QPCharacter")); //로그 출력
 		QPCharacter->SetOverlappingWorldItem(this); //겹치는 월드 아이템 설정
 	}
 }

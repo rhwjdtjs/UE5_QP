@@ -47,9 +47,14 @@ AQPCharacter::AQPCharacter()
 
 void AQPCharacter::SetOverlappingWorldItem(AWorldItemActor* WorldItem)
 {
-	if (OverlappingWorldItem == WorldItem) return; //겹쳐진 월드 아이템이 이미 설정된 아이템과 같으면 함수 종료
-	OverlappingWorldItem = WorldItem; //겹쳐진 월드 아이템 설정
-	UpdatePickupWidgetTarget(); //픽업 위젯 타겟 업데이트
+	if (OverlappingWorldItem == WorldItem)
+	{
+		UpdatePickupWidgetTarget();
+		return;
+	}
+
+	OverlappingWorldItem = WorldItem;
+	UpdatePickupWidgetTarget();
 }
 
 void AQPCharacter::EquipInventoryItemAt(const FIntPoint& Cell)
@@ -67,7 +72,7 @@ void AQPCharacter::EquipInventoryItemAt(const FIntPoint& Cell)
 	//기존 장착 무기 드랍 없이 해제
 	if (CombatComponent->HasWeapon()) //기존에 장착된 무기가 있으면
 	{
-		CombatComponent->UnEquipWeapon(false); //장착 해제
+		CombatComponent->UnEquipWeapon(true); //장착 해제
 	}
 
 	FActorSpawnParameters Params; //액터 스폰 파라미터 설정
@@ -97,50 +102,55 @@ void AQPCharacter::DropInventoryItemAt(const FIntPoint& Cell)
 	if (!InventoryComponent->FindSlotContaining(Cell, Slot)) return; // 해당 셀에 아이템이 없으면 종료
 	if (!Slot.Item.ItemData) return; // 아이템 데이터가 없으면 종료
 
+	UItemDataAsset* ItemData = Slot.Item.ItemData;
+	const int32 Quantity = Slot.Item.Quantity;
 	FVector DropLoc = GetActorLocation() + GetActorForwardVector() * 150.f; // 기본 드랍 위치는 캐릭터 앞
+	//가끔 마우스 위치로 드랍되던 버그 수정
+	const float HalfHeight = (GetCapsuleComponent()) ? GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 88.f; //캡슐 반높이 가져오기
+	const FVector TraceStart = DropLoc + FVector(0.f, 0.f, HalfHeight); //트레이스 시작 위치
+	const FVector TraceEnd = DropLoc - FVector(0.f, 0.f, HalfHeight + 2.5f); //트레이스 끝 위치
 
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController())) // 컨트롤러가 PC면
+	FHitResult GroundHit; //지면 히트 결과
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(InventoryDrop), false, this); //충돌 쿼리 파라미터 설정
+	Params.AddIgnoredActor(this); //자기 자신 무시
+
+	if (UWorld* World = GetWorld()) //월드 가져오기
 	{
-		FHitResult Hit; // 커서 히트 결과
-		if (PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, Hit)) // 커서 아래 바닥을 찍으면
+		if (World->LineTraceSingleByChannel(GroundHit, TraceStart, TraceEnd, ECC_Visibility, Params)) //라인 트레이스 수행
 		{
-			DropLoc = Hit.Location + FVector(0.f, 0.f, 20.f); // 바닥 위로 약간 띄워서 드랍
+			DropLoc = GroundHit.Location + FVector(0.f, 0.f, 20.f); //히트 위치 위로 약간 올려서 드랍
+		}
+		else //트레이스 실패 시 기본 위치 사용
+		{
+			DropLoc = TraceStart; //기본 드랍 위치 설정
 		}
 	}
-
-	UItemDataAsset* ItemData = Slot.Item.ItemData; // 아이템 데이터
-	const int32 Quantity = Slot.Item.Quantity; // 수량
-
-	if (ItemData->ItemType == EItemType::EIT_Weapon && ItemData->WeaponClass) // 무기 타입이고 무기 클래스가 있으면
+	// 무기면 무기 액터로 드랍
+	if (ItemData->ItemType == EItemType::EIT_Weapon && ItemData->WeaponClass) //무기 클래스가 있으면
 	{
-		FActorSpawnParameters Params; // 스폰 파라미터
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn; // 가능한 위치로 스폰
-		Params.Owner = nullptr; // 월드 드랍이므로 소유자 없음
-		Params.Instigator = nullptr; // 인스티게이터 없음
+		FActorSpawnParameters SpawnParams; //액터 스폰 파라미터 설정
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn; //충돌 처리 방법 설정
+		SpawnParams.Owner = nullptr; //소유자 없음
+		SpawnParams.Instigator = nullptr; //인스티게이터 없음
 
-		AWeaponBase* DroppedWeapon = GetWorld()->SpawnActor<AWeaponBase>(ItemData->WeaponClass, DropLoc, FRotator::ZeroRotator, Params); // 무기 액터 스폰
-		if (DroppedWeapon)
-		{
-			// 무기는 BP_GunWeapon 같은 액터 자체가 월드 픽업 대상
-			// 무기 드랍 로직은 WeaponBase에서 처리
-		}
+		GetWorld()->SpawnActor<AWeaponBase>(ItemData->WeaponClass, DropLoc, FRotator::ZeroRotator, SpawnParams); //무기 액터 스폰
 
-		InventoryComponent->RemoveItemAt(Slot.Position); // 인벤에서 제거
-		return; // 무기 드랍 처리 끝
+		InventoryComponent->RemoveItemAt(Slot.Position); //인벤토리에서 아이템 제거
+		return; //무기 드랍 후 함수 종료
 	}
 
-	// 무기가 아닌 일반 아이템은 WorldItemActor로 드랍
-	FActorSpawnParameters Params; // 스폰 파라미터
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn; // 가능한 위치로 스폰
+	// 일반 아이템이면 WorldItemActor로 드랍
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn; //충돌 처리 방법 설정
 
-	AWorldItemActor* Dropped = GetWorld()->SpawnActor<AWorldItemActor>(AWorldItemActor::StaticClass(), DropLoc, FRotator::ZeroRotator, Params); // 월드 아이템 액터 스폰
+	AWorldItemActor* Dropped = GetWorld()->SpawnActor<AWorldItemActor>(AWorldItemActor::StaticClass(), DropLoc, FRotator::ZeroRotator, SpawnParams); //월드 아이템 액터 스폰
 	if (Dropped)
 	{
-		Dropped->ItemData = ItemData; // 아이템 데이터 설정
-		Dropped->Quantity = Quantity; // 수량 설정
+		Dropped->ItemData = ItemData; //아이템 데이터 설정
+		Dropped->Quantity = Quantity; //수량 설정
 	}
 
-	InventoryComponent->RemoveItemAt(Slot.Position); // 인벤에서 제거
+	InventoryComponent->RemoveItemAt(Slot.Position); //인벤토리에서 아이템 제거
 }
 
 void AQPCharacter::BeginPlay()
@@ -221,26 +231,37 @@ void AQPCharacter::EquipReleased()
 	TryEquipWeapon(); //무기 장착 시도 짧게 눌렀을때
 }
 void AQPCharacter::TryEquipWeapon() {
-	if (!CombatComponent) return;
-	if (OverlappingWeapon) //겹쳐진 무기가 있으면
+	if (!CombatComponent) return; 
+
+	if (OverlappingWeapon)
 	{
-		CombatComponent->EquipWeapon(OverlappingWeapon, true); //무기 장착 시도
+		CombatComponent->EquipWeapon(OverlappingWeapon, true); //겹쳐진 무기 장착 시도
+
 		OverlappingWeapon = nullptr; //겹쳐진 무기 초기화
-		SetOverlappingWeapon(nullptr); //겹쳐진 무기 설정 함수 호출
-		return;
+		RefreshPickupCandidate(nullptr); //픽업 후보 갱신
+		return; //함수 종료
 	}
-	if(OverlappingWorldItem && InventoryComponent) //겹쳐진 월드 아이템이 있고 인벤토리 컴포넌트가 있으면
+
+	if (OverlappingWorldItem && InventoryComponent) //월드 아이템이 겹쳐져 있고 인벤토리 컴포넌트가 있으면
 	{
 		UItemDataAsset* ItemData = OverlappingWorldItem->ItemData; //겹쳐진 월드 아이템의 아이템 데이터 가져오기
 		const int32 Quantity = OverlappingWorldItem->Quantity; //겹쳐진 월드 아이템의 수량 가져오기
-		if (ItemData && Quantity > 0)
+
+		if (ItemData && Quantity > 0) //아이템 데이터가 유효하고 수량이 0보다 크면
 		{
 			const bool bAdded = InventoryComponent->AddItem(ItemData, Quantity); //아이템 인벤토리에 추가 시도
 			if (bAdded)
 			{
 				AWorldItemActor* Picked = OverlappingWorldItem; //픽업한 월드 아이템 저장
-				SetOverlappingWorldItem(nullptr); //겹쳐진 월드 아이템 초기화
-				Picked->Destroy(); //월드 아이템 액터 파괴
+				OverlappingWorldItem = nullptr; //겹쳐진 월드 아이템 초기화
+				UpdatePickupWidgetTarget(); //픽업 위젯 타겟 업데이트
+
+				if (Picked)
+				{
+					Picked->Destroy(); //월드 아이템 액터 파괴
+				}
+
+				RefreshPickupCandidate(Picked); //픽업 후보 갱신
 			}
 		}
 	}
@@ -248,35 +269,53 @@ void AQPCharacter::TryEquipWeapon() {
 //E 홀드(길게): 무기면 인벤 저장(장착 안함), 아이템이면 인벤 추가
 void AQPCharacter::TryStorePickupToInventory()
 {
-	if (!InventoryComponent) return; //인벤토리 컴포넌트가 없으면 함수 종료
+	if (!InventoryComponent) return;
 
 	if (OverlappingWeapon)
 	{
 		UItemDataAsset* WeaponItemData = OverlappingWeapon->GetWeaponItemData(); //겹쳐진 무기의 아이템 데이터 가져오기
 		if (!WeaponItemData) return; //아이템 데이터가 없으면 함수 종료
 
-		const bool bAdded = InventoryComponent->AddItem(WeaponItemData, 1); //아이템 인벤토리에 추가 시도
+		const bool bAdded = InventoryComponent->AddItem(WeaponItemData, 1); //인벤토리에 무기 아이템 추가 시도
 		if (bAdded)
 		{
 			AWeaponBase* PickedWeapon = OverlappingWeapon; //픽업한 무기 저장
-			SetOverlappingWeapon(nullptr); //겹쳐진 무기 초기화
-			PickedWeapon->Destroy(); //무기 액터 파괴
+
+			OverlappingWeapon = nullptr; //겹쳐진 무기 초기화
+			UpdatePickupWidgetTarget(); //픽업 위젯 타겟 업데이트
+
+			if (PickedWeapon)
+			{
+				PickedWeapon->Destroy(); //무기 액터 파괴
+			}
+
+			RefreshPickupCandidate(PickedWeapon); //픽업 후보 갱신
 		}
 		return;
 	}
+
 	// 월드 아이템: 인벤토리 추가
 	if (OverlappingWorldItem)
 	{
 		UItemDataAsset* ItemData = OverlappingWorldItem->ItemData; //겹쳐진 월드 아이템의 아이템 데이터 가져오기
 		const int32 Quantity = OverlappingWorldItem->Quantity; //겹쳐진 월드 아이템의 수량 가져오기
+
 		if (ItemData && Quantity > 0)
 		{
 			const bool bAdded = InventoryComponent->AddItem(ItemData, Quantity); //아이템 인벤토리에 추가 시도
 			if (bAdded)
 			{
 				AWorldItemActor* Picked = OverlappingWorldItem; //픽업한 월드 아이템 저장
-				SetOverlappingWorldItem(nullptr); //겹쳐진 월드 아이템 초기화
-				Picked->Destroy(); //월드 아이템 액터 파괴
+
+				OverlappingWorldItem = nullptr; //겹쳐진 월드 아이템 초기화
+				UpdatePickupWidgetTarget(); //픽업 위젯 타겟 업데이트
+
+				if (Picked)
+				{
+					Picked->Destroy(); //월드 아이템 액터 파괴
+				}
+
+				RefreshPickupCandidate(Picked); //픽업 후보 갱신
 			}
 		}
 	}
@@ -289,9 +328,14 @@ void AQPCharacter::OnEquipHoldTriggered()
 }
 void AQPCharacter::SetOverlappingWeapon(AWeaponBase* Weapon)
 {
-	if (OverlappingWeapon == Weapon) return; //겹쳐진 무기가 이미 설정된 무기와 같으면 함수 종료
-	OverlappingWeapon = Weapon; //겹쳐진 무기 설정
-	UpdatePickupWidgetTarget(); //픽업 위젯 타겟 업데이트
+	if (OverlappingWeapon == Weapon)
+	{
+		UpdatePickupWidgetTarget();
+		return;
+	}
+
+	OverlappingWeapon = Weapon;
+	UpdatePickupWidgetTarget();
 	
 }
 void AQPCharacter::HandleWeaponTypeChanged(EQPWeaponType NewWeaponType)
@@ -394,15 +438,68 @@ void AQPCharacter::UpdateMovementSpeed()
 void AQPCharacter::UpdatePickupWidgetTarget()
 {
 	if (!IsLocallyControlled()) return; //로컬 컨트롤러가 아니면 함수 종료
+	if (OverlappingWeapon && !IsValid(OverlappingWeapon))
+	{
+		OverlappingWeapon = nullptr; //유효하지 않으면 초기화
+	}
+	if (OverlappingWorldItem && !IsValid(OverlappingWorldItem))
+	{
+		OverlappingWorldItem = nullptr; //유효하지 않으면 초기화
+	}
 
 	AActor* NewTarget = nullptr; //새로운 타겟 액터 초기화
-	if(OverlappingWeapon) NewTarget = OverlappingWeapon; //겹쳐진 무기가 있으면 타겟 설정
-	else if (OverlappingWorldItem) NewTarget = OverlappingWorldItem; //겹쳐진 월드 아이템이 있으면 타겟 설정
+	if (OverlappingWeapon) NewTarget = OverlappingWeapon; //겹쳐진 무기가 있으면 무기 설정
+	else if (OverlappingWorldItem) NewTarget = OverlappingWorldItem; //겹쳐진 월드 아이템이 있으면 월드 아이템 설정
 
-	if(AQPPlayerController* PlayerController = Cast<AQPPlayerController>(GetController()))
+	if (AQPPlayerController* PlayerController = Cast<AQPPlayerController>(GetController())) //플레이어 컨트롤러로 캐스팅 시도
 	{
 		PlayerController->SetPickupTarget(NewTarget); //픽업 타겟 설정
 	}
+}
+void AQPCharacter::RefreshPickupCandidate(const AActor* ActorToIgnore)
+{
+	TArray<AActor*> Overlaps; //겹쳐진 액터 배열
+	GetOverlappingActors(Overlaps); //겹쳐진 액터들 가져오기
+
+	AWeaponBase* BestWeapon = nullptr; //최적의 무기 초기화
+	AWorldItemActor* BestWorldItem = nullptr; //최적의 월드 아이템 초기화
+
+	float BestWeaponDistSq = TNumericLimits<float>::Max(); //최적의 무기 거리 제곱 초기화
+	float BestWorldDistSq = TNumericLimits<float>::Max(); //최적의 월드 아이템 거리 제곱 초기화
+
+	const AWeaponBase* Equipped = CombatComponent ? CombatComponent->GetEquippedWeapon() : nullptr; //장착된 무기 가져오기
+	const FVector MyLoc = GetActorLocation(); //자신의 위치 가져오기
+
+	for (AActor* actors : Overlaps) //겹쳐진 액터들 순회
+	{
+		if (!IsValid(actors) || actors == this) continue; //유효하지 않거나 자기 자신이면 건너뜀
+		if (ActorToIgnore && actors == ActorToIgnore) continue; //무시할 액터이면 건너뜀
+
+		if (AWeaponBase* weapons = Cast<AWeaponBase>(actors)) //무기 액터로 캐스팅 시도
+		{
+			if (Equipped && weapons == Equipped) continue; //이미 장착된 무기이면 건너뜀
+
+			const float DistSq = FVector::DistSquared(weapons->GetActorLocation(), MyLoc); //무기와 자신의 거리 제곱 계산
+			if (DistSq < BestWeaponDistSq) //최적의 무기 거리 제곱보다 작으면
+			{
+				BestWeaponDistSq = DistSq; //최적의 무기 거리 제곱 업데이트
+				BestWeapon = weapons; //최적의 무기 업데이트
+			}
+		}
+		else if (AWorldItemActor* worlditems = Cast<AWorldItemActor>(actors)) //월드 아이템 액터로 캐스팅 시도
+		{
+			const float DistSq = FVector::DistSquared(worlditems->GetActorLocation(), MyLoc); //월드 아이템과 자신의 거리 제곱 계산
+			if (DistSq < BestWorldDistSq) //최적의 월드 아이템 거리 제곱보다 작으면
+			{
+				BestWorldDistSq = DistSq; //최적의 월드 아이템 거리 제곱 업데이트
+				BestWorldItem = worlditems; //최적의 월드 아이템 업데이트
+			}
+		}
+	}
+	OverlappingWeapon = BestWeapon; //겹쳐진 무기 설정
+	OverlappingWorldItem = (BestWeapon ? nullptr : BestWorldItem); //겹쳐진 월드 아이템 설정 (무기가 있으면 무시)
+
+	UpdatePickupWidgetTarget(); //픽업 위젯 타겟 업데이트
 }
 //전투 (Combat) 관련 함수들
 
@@ -449,6 +546,7 @@ void AQPCharacter::TryDropEquipped()
 
 	if (CombatComponent->HasWeapon()) {
 		CombatComponent->UnEquipWeapon(true); //장착 해제 및 드랍
+		RefreshPickupCandidate(nullptr); //픽업 후보 갱신
 		return; //함수 종료
 	}
 }

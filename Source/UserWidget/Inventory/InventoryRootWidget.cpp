@@ -39,10 +39,8 @@ bool UInventoryRootWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 
 	UInventoryDragOperation* DragOp = Cast<UInventoryDragOperation>(InOperation); // 인벤 드래그인지 캐스팅
 	if (!DragOp) return false; // 인벤 드래그가 아니면 실패
-	if (!DragOp->SourceInventory) return false; // 소스 인벤이 없으면 실패
 
 	const FVector2D ScreenPos = InDragDropEvent.GetScreenSpacePosition(); // 드랍된 화면 좌표
-
 	const FGeometry GridGeo = InventoryGrid->GetCachedGeometry(); // 그리드의 지오메트리
 	const bool bOverGrid = GridGeo.IsUnderLocation(ScreenPos); // 드랍 위치가 그리드 위인지 확인
 
@@ -52,13 +50,13 @@ bool UInventoryRootWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 		return InventoryGrid->HandleDropFromScreenPos(InOperation, ScreenPos); // 그리드로 전달
 	}
 
-	//그리드 밖으로 떨어졌으면 월드로 드랍 처리
-	AQPCharacter* Character = Cast<AQPCharacter>(GetOwningPlayerPawn()); // 소유 캐릭터
-	if (!Character) return false; // 캐릭터가 없으면 실패
-
-	Character->DropInventoryItemAt(DragOp->FromCell); // 인벤 아이템을 월드로 드랍
-
-	return true; // 드랍 처리 완료
+	if (DragOp->SourceInventory) {
+		AQPCharacter* Character = Cast<AQPCharacter>(GetOwningPlayerPawn()); // 소유한 플레이어 폰을 AQPCharacter로 캐스팅
+		if (!Character) return false; // 캐스팅 실패 시 실패 반환
+		Character->DropInventoryItemAt(DragOp->FromCell); // 캐릭터의 해당 셀 아이템 월드에 드롭
+		return true; // 성공 반환
+	}
+	return false;// 실패 반환 (월드에서 액터는 그리드 밖 드랍 무시)
 }
 
 void UInventoryRootWidget::HandleInventoryChanged()

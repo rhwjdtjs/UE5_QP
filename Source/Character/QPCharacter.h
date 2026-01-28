@@ -111,6 +111,7 @@ private:
 	void UpdateMovementSpeed(); //움직임 속도 업데이트
 	bool bWantsToSprint = false; //달리기 의사 여부
 	void UpdatePickupWidgetTarget(); //픽업 위젯 타겟 업데이트 함수
+	void RefreshPickupCandidate(const AActor* ActorToIgnore = nullptr); //발밑에 남아있는 픽업 대상을 재탐색해서 타겟 복구
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Weapon", meta = (AllowPrivateAccess = "true"))
 	AWeaponBase* OverlappingWeapon = nullptr; //장착된 무기 포인터
 
