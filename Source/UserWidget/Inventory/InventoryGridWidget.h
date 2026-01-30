@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "PJ_Quiet_Protocol/Inventory/InventoryComponent.h"
 #include "InventoryGridWidget.generated.h"
 
 
@@ -9,7 +10,7 @@ UCLASS()
 class PJ_QUIET_PROTOCOL_API UInventoryGridWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 	void SetInventory(class UInventoryComponent* InInventory); // 인벤토트 컴포넌트 설정
 	void RefreshGrid(); // 그리드 새로고침(셀+아이템 재구성)
@@ -18,7 +19,8 @@ public:
 protected:
 	virtual void NativeConstruct() override; // 위젯 생성 시
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override; // 드롭 이벤트 처리
-
+	virtual bool NativeOnDragOver(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override; // 드래그 오버 이벤트 처리(0130 추가)
+	virtual void NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override; // 드래그 리브 이벤트 처리(0130 추가)
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<class USizeBox> GridSizeBox; // 있으면 자동 크기 맞춤
 
@@ -49,4 +51,11 @@ private:
 	void BuildItems(); // 아이템 구성
 
 	bool ScreenToCell(const FVector2D& ScreenPos, FIntPoint& OutCell) const; // 화면 좌표 -> 셀 좌표 변환
+
+	//추가 기능
+	UPROPERTY()
+	TArray<TObjectPtr<UUserWidget>> CellWidgets; // 생성된 셀 위젯들(0130 추가)
+	int32 CellIndex(int32 X, int32 Y) const { return Y * Inventory->Width + X; } // 셀 인덱스 계산(0130 추가)
+	void UpdateOccluedCells(); // 가려진 셀 업데이트(0130 추가)
+	bool CanPlaceForDragPreview(class UInventoryDragOperation* DragOp, const FIntPoint& ToCell) const; // 드래그 미리보기용 배치 가능 여부(0130 추가)
 };

@@ -44,4 +44,15 @@ private:
 	bool bInventoryOpen = false; // 인벤토리 열림 여부
 	void SetInventoryOpen(bool bOpen); // 인벤토리 열림 상태 설정 함수
 	bool bLootInventoryOpen = false; // 전리품 인벤토리 열림 여부
+	bool bInventoryOpenedByLootKey = false; // 전리품 키로 인벤토리가 열렸는지 여부
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Loot")
+	float LootScanRadius = 300.f; // 전리품 스캔 반경
+	UPROPERTY()
+	TObjectPtr<class ULootListWidget> CachedLootListWidget=nullptr; // 전리품 목록 위젯 인스턴스
+	class UBorder* CachedLootPanelBorder=nullptr; // 전리품 목록 컨테이너 위젯 인스턴스
+	class ULootListWidget* GetLootListWidget(); // 전리품 목록 위젯 가져오기 함수
+	void SetLootListVisible(bool bVisible); // 전리품 목록 위젯 표시 상태 설정 함수
+	bool IsLootListVisible() const; // 전리품 목록 위젯 표시 여부 확인 함수
+	bool HasNearbyLoot(float Radius) const; // 근처에 전리품이 있는지 확인하는 함수
+	void CloseLootInventoryWidget(bool bRestoreInventoryInputMode); // 전리품 인벤토리 위젯 닫기 함수
 };
