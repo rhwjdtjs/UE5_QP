@@ -149,7 +149,7 @@ void UItemIconWidget::ApplyVisual()
 
 	if (QuantityText) // 수량 텍스트가 유효한지 확인
 	{
-		if (Quantity > 0) // 수량이 0보다 큰지 확인
+		if (Quantity > 1) // 수량이 0보다 큰지 확인
 		{
 			QuantityText->SetText(FText::AsNumber(Quantity)); // 수량 텍스트 설정
 			QuantityText->SetVisibility(ESlateVisibility::HitTestInvisible); // 텍스트 가시성 설정

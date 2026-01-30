@@ -18,6 +18,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetVisual(class UItemDataAsset* InItemData, int32 InQuantity, const FVector2D& InPixelSize); // 아이템 데이터와 수량을 설정하는 함수
 
+	UFUNCTION(BlueprintCallable)
+	void SetPlacementState(bool bCanPlace); // 아이템 배치 가능 상태 설정 함수(0130 추가)
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UImage> ItemImage; // 아이템 이미지를 표시하는 위젯
@@ -27,4 +30,7 @@ protected:
 
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USizeBox> RootSizeBox; // 아이템 크기를 조절
+
+	UPROPERTY(meta = (BindWidgetOptional)) // 선택적 바인딩
+	TObjectPtr<class UImage> OutlineImage; // 아이템 외곽선을 표시하는 위젯(0130 추가)
 };

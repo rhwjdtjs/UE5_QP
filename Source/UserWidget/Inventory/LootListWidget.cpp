@@ -37,8 +37,11 @@ void ULootListWidget::NativeDestruct()
 
 void ULootListWidget::RefreshLootList()
 {
-	// 인벤(루팅 UI) 열려서 실제로 보일 때만 갱신
-	//if (GetVisibility() != ESlateVisibility::Visible) return; // 위젯이 보이지 않으면 갱신하지 않음
+	const ESlateVisibility WidgetVisibility = GetVisibility(); // 위젯의 현재 가시성 상태 가져오기
+	if(WidgetVisibility == ESlateVisibility::Collapsed || WidgetVisibility == ESlateVisibility::Hidden)
+	{
+		return; // 위젯이 숨겨져 있으면 갱신하지 않음
+	}
 	if (!LootScroll)
 	{
 		return;

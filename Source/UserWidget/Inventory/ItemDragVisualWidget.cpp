@@ -21,7 +21,7 @@ void UItemDragVisualWidget::SetVisual(UItemDataAsset* InItemData, int32 InQuanti
 	}
 	if(QuantityText)
 	{
-		if (InQuantity > 0)
+		if (InQuantity > 1)
 		{
 			QuantityText->SetText(FText::AsNumber(InQuantity)); // 수량 텍스트 설정
 			QuantityText->SetVisibility(ESlateVisibility::Visible); // 텍스트 가시성 설정
@@ -32,4 +32,16 @@ void UItemDragVisualWidget::SetVisual(UItemDataAsset* InItemData, int32 InQuanti
 			QuantityText->SetVisibility(ESlateVisibility::Hidden); // 텍스트 숨김
 		}
 	}
+}
+
+void UItemDragVisualWidget::SetPlacementState(bool bCanPlace)
+{
+	if (!OutlineImage) return;
+
+	const FLinearColor Color = bCanPlace ? FLinearColor::Green : FLinearColor::Red;
+
+	FSlateBrush Brush = OutlineImage->GetBrush();
+	Brush.OutlineSettings.Color = Color;
+	OutlineImage->SetBrush(Brush);
+	OutlineImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 }
