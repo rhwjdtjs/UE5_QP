@@ -4,10 +4,12 @@
 #include "QPCombatTypes.generated.h"
 
 UENUM(BlueprintType)
-enum class EQPWeaponType : uint8 //¹«±â Å¸ÀÔ ¿­°ÅÇü
+enum class EQPWeaponType : uint8 //ë¬´ê¸° íƒ€ì… ì—´ê±°í˜•
 {
-	EWT_None UMETA(DisplayName = "None"), //¹«±â ¾øÀ½
-	EWT_Melee UMETA(DisplayName = "Melee"), //±ÙÁ¢ ¹«±â
-	EWT_Gun UMETA(DisplayName = "Gun"), //ÃÑ±â
+	EWT_None UMETA(DisplayName = "None"), //ë¬´ê¸° ì—†ìŒ
+	EWT_Melee UMETA(DisplayName = "Melee"), //ê·¼ì ‘ ë¬´ê¸°
+	EWT_Rifle UMETA(DisplayName = "Rifle"), //ì†Œì´
+	EWT_Shotgun UMETA(DisplayName = "Shotgun"), //ìƒ·ê±´
+	EWT_Handgun UMETA(DisplayName = "Handgun"), //ê¶Œì´
 };
 
